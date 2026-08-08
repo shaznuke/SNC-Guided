@@ -1,0 +1,39 @@
+const fs = require('fs');
+const path = require('path');
+
+const iconsDir = path.join(__dirname, 'icons');
+if (!fs.existsSync(iconsDir)) {
+  fs.mkdirSync(iconsDir, { recursive: true });
+}
+
+// Generate SVG icon
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#131a2a" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)" />
+  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" />
+  
+  <!-- Dumbbell Icon -->
+  <g transform="translate(136, 176)" fill="url(#accent)">
+    <rect x="0" y="40" width="30" height="80" rx="10" />
+    <rect x="36" y="20" width="26" height="120" rx="10" />
+    
+    <rect x="62" y="70" width="116" height="20" rx="6" fill="#ffffff" />
+    
+    <rect x="178" y="20" width="26" height="120" rx="10" />
+    <rect x="210" y="40" width="30" height="80" rx="10" />
+  </g>
+  <text x="256" y="420" font-family="-apple-system, sans-serif" font-size="44" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">SNC TRACKER</text>
+</svg>`;
+
+fs.writeFileSync(path.join(iconsDir, 'icon.svg'), svgContent);
+console.log('SVG icon generated!');
