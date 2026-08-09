@@ -1,6 +1,6 @@
 /**
  * Workout Engine
- * Manages active session state, rest countdowns, interval timers & literal Metronome Voice/Beeps
+ * Manages active session state, rest countdowns, interval timers & Web Audio + Speech for DOWN, 3, 2, 1, UP
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -14,6 +14,9 @@ export class WorkoutEngine {
     this.startTime = Date.now();
     this.elapsedSeconds = 0;
     this.timerInterval = null;
+
+    // Audio Context Unlocked state for iOS Safari
+    this.audioCtx = null;
 
     // Rest Timer State
     this.restTimerSec = 0;
@@ -36,6 +39,20 @@ export class WorkoutEngine {
 
     this.initExerciseLogs();
     this.startSessionClock();
+  }
+
+  initAudioContext() {
+    if (!this.audioCtx) {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          this.audioCtx = new AudioContextClass();
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+        }
+      } catch (e) {}
+    }
   }
 
   initExerciseLogs() {
@@ -122,7 +139,7 @@ export class WorkoutEngine {
 
       if (this.restTimerSec <= 0) {
         this.stopRestTimer();
-        this.playBeepSound();
+        this.playAudioPitch(880, 0.4);
         if (onComplete) onComplete();
       }
     }, 1000);
@@ -150,7 +167,7 @@ export class WorkoutEngine {
       if (onTick) onTick(this.intervalSec, this.intervalPhase, this.intervalRound);
 
       if (this.intervalSec <= 0) {
-        this.playBeepSound();
+        this.playAudioPitch(1000, 0.3);
         if (this.intervalPhase === "HARD") {
           this.intervalPhase = "EASY";
           this.intervalSec = 30;
@@ -179,27 +196,33 @@ export class WorkoutEngine {
   }
 
   /**
-   * Literal 3-Sec Metronome: DOWN -> 3 -> 2 -> 1 -> DRIVE UP!
+   * Literal Audio & Voice Metronome: DOWN -> 3 -> 2 -> 1 -> UP!
    */
   startMetronome(onTick) {
+    this.initAudioContext();
     this.stopMetronome();
     this.metronomeActive = true;
-    this.metronomeStep = 0; // 0: DOWN, 1: 3, 2: 2, 3: 1, 4: UP
+    this.metronomeStep = 0;
 
-    const sequence = [
-      { text: "DOWN ⬇️", speech: "Down" },
-      { text: "3", speech: "3" },
-      { text: "2", speech: "2" },
-      { text: "1", speech: "1" },
-      { text: "DRIVE UP! ⬆️", speech: "Up" }
+    const steps = [
+      { text: "DOWN ⬇️", speech: "Down", pitch: 300 },
+      { text: "3", speech: "Three", pitch: 440 },
+      { text: "2", speech: "Two", pitch: 520 },
+      { text: "1", speech: "One", pitch: 660 },
+      { text: "DRIVE UP! ⬆️", speech: "Up", pitch: 880 }
     ];
 
     const triggerStep = () => {
-      const stepObj = sequence[this.metronomeStep];
-      if (onTick) onTick(stepObj.text, this.metronomeStep);
-      this.speakVoice(stepObj.speech);
+      const current = steps[this.metronomeStep];
+      if (onTick) onTick(current.text, this.metronomeStep);
 
-      this.metronomeStep = (this.metronomeStep + 1) % sequence.length;
+      // Play audio tone
+      this.playAudioPitch(current.pitch, 0.15);
+
+      // Speak voice utterance
+      this.speakVoice(current.speech);
+
+      this.metronomeStep = (this.metronomeStep + 1) % steps.length;
     };
 
     triggerStep();
@@ -212,38 +235,46 @@ export class WorkoutEngine {
       this.metronomeInterval = null;
     }
     this.metronomeActive = false;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   }
 
   speakVoice(text) {
     try {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop pending speech
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.2; // Slightly faster for workout rhythm
+        utterance.rate = 1.3;
         utterance.pitch = 1.0;
+        utterance.volume = 1.0;
         window.speechSynthesis.speak(utterance);
       }
-    } catch (e) {
-      // Audio synthesis fallback
-    }
+    } catch (e) {}
   }
 
-  playBeepSound(freq = 800) {
+  playAudioPitch(freq = 440, duration = 0.15) {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      this.initAudioContext();
+      if (!this.audioCtx) return;
+
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
       osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+
+      gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(this.audioCtx.destination);
+
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
-      
+      osc.stop(this.audioCtx.currentTime + duration);
+
       if (navigator.vibrate) {
-        navigator.vibrate(200);
+        navigator.vibrate(60);
       }
     } catch (e) {}
   }
