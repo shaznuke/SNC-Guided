@@ -1,6 +1,6 @@
 /**
  * Main Application Orchestrator & View Controller
- * Redline Beast Mode Theme + Motivational Quote Rotator
+ * Luxury Minimalist Theme + Voice/Visual Metronome + Peppered Inspirational Quotes
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -8,15 +8,14 @@ import { StorageEngine } from './storage.js';
 import { WorkoutEngine } from './workoutEngine.js';
 import { CoachUpdater } from './coachUpdater.js';
 
-const MOTIVATIONAL_QUOTES = [
-  "NO SHORTCUTS. ONLY SWEAT.",
-  "OUTWORK YOUR YESTERDAY.",
-  "CONSISTENCY IS YOUR SUPERPOWER.",
-  "DISCIPLINE EQUALS FREEDOM.",
-  "PAIN IS PROGRESS LEAVING THE BODY.",
-  "EARN YOUR REST.",
-  "BE STRONGER THAN YOUR EXCUSES.",
-  "DOMINATE TODAY'S SESSION."
+const INSPIRATIONAL_QUOTES = [
+  "Consistency is the quiet bridge between goals and accomplishment.",
+  "Small daily improvements over time lead to stunning results.",
+  "Focus on the process, and the outcome will take care of itself.",
+  "Strength is built in the quiet moments of effort.",
+  "Your dedication today creates your resilience tomorrow.",
+  "Quality over load. Precision in every movement.",
+  "Discipline is choosing between what you want now and what you want most."
 ];
 
 class AppController {
@@ -27,7 +26,7 @@ class AppController {
 
     this.initDOMReferences();
     this.bindEvents();
-    this.initMotivationalQuote();
+    this.initInspirationalQuote();
     this.render();
     this.registerServiceWorker();
   }
@@ -51,6 +50,9 @@ class AppController {
     this.sessionTitle = document.getElementById("sessionTitle");
     this.sessionTimer = document.getElementById("sessionTimer");
     this.btnFinishSession = document.getElementById("btnFinishSession");
+
+    this.metronomeVisualBar = document.getElementById("metronomeVisualBar");
+    this.metronomeStatusText = document.getElementById("metronomeStatusText");
 
     this.floatingRestTimer = document.getElementById("floatingRestTimer");
     this.restTimerDisplay = document.getElementById("restTimerDisplay");
@@ -78,10 +80,10 @@ class AppController {
     this.btnResetData = document.getElementById("btnResetData");
   }
 
-  initMotivationalQuote() {
+  initInspirationalQuote() {
     if (this.motivationalQuote) {
       const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-      const selectedQuote = MOTIVATIONAL_QUOTES[dayOfYear % MOTIVATIONAL_QUOTES.length];
+      const selectedQuote = INSPIRATIONAL_QUOTES[dayOfYear % INSPIRATIONAL_QUOTES.length];
       this.motivationalQuote.textContent = selectedQuote;
     }
   }
@@ -172,17 +174,24 @@ class AppController {
       });
     }
 
+    // Toggle Voice & Visual Metronome (DOWN -> 3 -> 2 -> 1 -> UP)
     if (this.btnToggleMetronome) {
       this.btnToggleMetronome.addEventListener("click", () => {
         if (this.activeWorkout) {
           if (this.activeWorkout.metronomeActive) {
             this.activeWorkout.stopMetronome();
             this.btnToggleMetronome.classList.remove("active");
-            this.btnToggleMetronome.textContent = "⏱ Metronome (3s)";
+            this.btnToggleMetronome.textContent = "⏱ Voice Metronome (3s)";
+            if (this.metronomeVisualBar) this.metronomeVisualBar.classList.add("hidden");
           } else {
             this.btnToggleMetronome.classList.add("active");
-            this.activeWorkout.startMetronome((count, action) => {
-              this.btnToggleMetronome.textContent = count > 0 ? `⏱ ${count}s ${action}` : `⏱ ${action}`;
+            if (this.metronomeVisualBar) this.metronomeVisualBar.classList.remove("hidden");
+            
+            this.activeWorkout.startMetronome((stepText, stepIdx) => {
+              if (this.metronomeStatusText) {
+                this.metronomeStatusText.textContent = stepText;
+              }
+              this.btnToggleMetronome.textContent = `⏱ Metronome: ${stepText}`;
             });
           }
         }
@@ -271,12 +280,12 @@ class AppController {
         </div>
         <div class="day-subtitle">${day.subtitle}</div>
         <div class="day-meta-tags">
-          <span class="tag tag-highlight">🔥 Week ${this.currentWeek} Target: ${targetInfo.reps} Reps</span>
+          <span class="tag tag-highlight">Week ${this.currentWeek} Target: ${targetInfo.reps} Reps</span>
           <span class="tag">Holds: ${targetInfo.holdSec}s</span>
           <span class="tag">3 Sets</span>
         </div>
         <button class="btn-start-day">
-          <span>⚡ START SESSION</span>
+          <span>Start Session</span>
         </button>
       `;
 
@@ -316,7 +325,7 @@ class AppController {
 
     dayData.sections.forEach((section) => {
       const secHeader = document.createElement("h4");
-      secHeader.style.cssText = "color: var(--accent-crimson); margin: 20px 0 10px 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 900;";
+      secHeader.style.cssText = "color: var(--accent-gold); margin: 20px 0 10px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;";
       secHeader.textContent = section.title;
       this.sessionExercisesContainer.appendChild(secHeader);
 
@@ -337,7 +346,7 @@ class AppController {
         let extraToolsHTML = "";
         if (ex.hasIntervalTimer) {
           extraToolsHTML = `
-            <button class="btn-start-day" style="margin-bottom: 12px; background: linear-gradient(135deg, var(--accent-crimson), var(--accent-orange));" id="btnLaunchInterval_${ex.id}">
+            <button class="btn-start-day" style="margin-bottom: 12px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose)); color: #0f1013;" id="btnLaunchInterval_${ex.id}">
               ⏱ Launch 30s/30s Interval Timer (8 Rounds)
             </button>
           `;
@@ -429,12 +438,12 @@ class AppController {
         this.intervalRoundsText.textContent = `Round ${round} of 8`;
       },
       (phase, round, secLeft) => {
-        this.intervalPhaseTitle.textContent = phase === "HARD" ? "🔥 GO HARD! (30s)" : "🧊 EASY RECOVERY (30s)";
+        this.intervalPhaseTitle.textContent = phase === "HARD" ? "⚡ GO HARD (30s)" : "🧊 EASY RECOVERY (30s)";
         this.intervalPhaseTitle.className = `interval-phase-title ${phase}`;
         this.intervalCountdown.textContent = secLeft.toString().padStart(2, '0');
       },
       () => {
-        this.intervalPhaseTitle.textContent = "🎉 WORKOUT FINISHED!";
+        this.intervalPhaseTitle.textContent = "✨ WORKOUT FINISHED!";
         this.intervalCountdown.textContent = "00";
         setTimeout(() => this.intervalModal.classList.add("hidden"), 2000);
       }
@@ -472,6 +481,7 @@ class AppController {
   closeCoachUpdateModal() {
     if (this.coachModal) this.coachModal.classList.add("hidden");
     this.hideFloatingRestTimer();
+    if (this.metronomeVisualBar) this.metronomeVisualBar.classList.add("hidden");
     this.activeWorkout = null;
   }
 
@@ -484,9 +494,9 @@ class AppController {
     if (history.length === 0) {
       this.historyListContainer.innerHTML = `
         <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
-          <div style="font-size: 2.5rem; margin-bottom: 8px;">📋</div>
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">📋</div>
           <p>No completed workout logs yet.</p>
-          <p style="font-size: 0.85rem;">Complete your first session to view coach updates & logs here!</p>
+          <p style="font-size: 0.82rem;">Complete your first session to view coach updates & logs here!</p>
         </div>
       `;
       return;
@@ -504,7 +514,7 @@ class AppController {
           <span>⏱ ${log.durationMins} mins</span>
         </div>
         <div class="history-card-date">📅 ${log.date} ${log.rpeRating ? `| RPE ${log.rpeRating}/10` : ''}</div>
-        <pre style="margin-top: 10px; font-family: monospace; font-size: 0.78rem; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 10px; border-radius: var(--radius-sm); white-space: pre-wrap;">${summaryText}</pre>
+        <pre style="margin-top: 10px; font-family: monospace; font-size: 0.78rem; color: var(--text-secondary); background: rgba(0,0,0,0.3); padding: 10px; border-radius: var(--radius-sm); white-space: pre-wrap;">${summaryText}</pre>
       `;
 
       this.historyListContainer.appendChild(card);
@@ -521,9 +531,9 @@ class AppController {
     if (entries.length === 0) {
       this.prsListContainer.innerHTML = `
         <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
-          <div style="font-size: 2.5rem; margin-bottom: 8px;">🏆</div>
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">🏆</div>
           <p>No Personal Records logged yet.</p>
-          <p style="font-size: 0.85rem;">Log your exercise weights to track strength gains across 6 weeks!</p>
+          <p style="font-size: 0.82rem;">Log your exercise weights to track strength gains across 6 weeks!</p>
         </div>
       `;
       return;
@@ -535,7 +545,7 @@ class AppController {
       card.innerHTML = `
         <div class="history-card-header">
           <span>🏆 ${pr.exerciseName}</span>
-          <span style="color: var(--accent-green); font-size: 1.1rem;">${pr.maxWeight} kg</span>
+          <span style="color: var(--accent-gold); font-size: 1.05rem;">${pr.maxWeight} kg</span>
         </div>
         <div class="history-card-date">Best Reps: ${pr.bestReps} reps | Week ${pr.week} (${pr.date})</div>
       `;

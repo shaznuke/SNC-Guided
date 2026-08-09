@@ -1,42 +1,43 @@
 /* ==========================================================================
-   SNC Guided - Sleek Premium iOS Dark Aesthetic
-   Ultra-Clean Typography, High Contrast, & Refined Minimalist UI
+   SNC Guided - Luxury Minimalist Dark Aesthetic (Equinox / Oura Style)
+   Warm Champagne Gold, Matte Obsidian, Crisp Modern Typography
    ========================================================================== */
 
-:root {
-  --bg-primary: #0b0f19;
-  --bg-card: #151d2a;
-  --bg-card-solid: #192232;
-  --bg-input: #1f2a3e;
-  
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(225, 29, 72, 0.5);
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-  --accent-crimson: #e11d48;
-  --accent-crimson-hover: #f43f5e;
-  --accent-coral: #fb7185;
-  --accent-orange: #f97316;
-  --accent-emerald: #10b981;
-  --accent-indigo: #6366f1;
+:root {
+  --bg-primary: #0f1013;
+  --bg-card: #17191e;
+  --bg-card-solid: #1c1e24;
+  --bg-input: #22252d;
+  
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-gold: rgba(212, 175, 55, 0.35);
+
+  --accent-gold: #d4af37;
+  --accent-gold-hover: #e5c158;
+  --accent-rose: #e2b897;
+  --accent-emerald: #34d399;
+  --accent-indigo: #818cf8;
 
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --text-secondary: #a0aec0;
   --text-muted: #64748b;
 
-  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
   --radius-pill: 9999px;
 
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
   
   --safe-area-bottom: env(safe-area-inset-bottom, 16px);
   --safe-area-top: env(safe-area-inset-top, 20px);
 }
 
-/* Reset & Box Sizing */
+/* Reset & Base Rules */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -49,8 +50,8 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -65,36 +66,12 @@ body {
   padding: 0 16px;
 }
 
-/* Motivational Quote Banner */
-.motivational-banner {
-  background: linear-gradient(135deg, rgba(225, 29, 72, 0.12), rgba(99, 102, 241, 0.1));
-  border: 1px solid rgba(225, 29, 72, 0.25);
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.quote-icon {
-  font-size: 1.2rem;
-}
-
-.quote-text {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
 /* Header */
 .app-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11, 15, 25, 0.92);
+  background: rgba(15, 16, 19, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
@@ -113,28 +90,30 @@ body {
 .brand-icon {
   width: 32px;
   height: 32px;
-  background: var(--accent-crimson);
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose));
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
+  color: #000;
 }
 
 .brand-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   color: #ffffff;
+  text-transform: uppercase;
 }
 
 /* Week Selector Pill */
 .week-pill-select {
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
+  color: var(--accent-gold);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   padding: 6px 12px;
   border-radius: var(--radius-pill);
   outline: none;
@@ -143,7 +122,32 @@ body {
 }
 
 .week-pill-select:focus {
-  border-color: var(--accent-crimson);
+  border-color: var(--accent-gold);
+}
+
+/* Inspirational Quote Cards (Peppered Around) */
+.inspirational-card {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(226, 184, 151, 0.05));
+  border: 1px solid var(--border-gold);
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quote-icon {
+  font-size: 1.1rem;
+  color: var(--accent-gold);
+}
+
+.quote-text {
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.45;
 }
 
 /* Navigation Tabs (Bottom Fixed Bar) */
@@ -153,7 +157,7 @@ body {
   left: 0;
   right: 0;
   z-index: 90;
-  background: rgba(15, 21, 34, 0.95);
+  background: rgba(18, 19, 23, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-subtle);
@@ -177,20 +181,16 @@ body {
   border: none;
   cursor: pointer;
   width: 25%;
-  transition: color 0.2s ease, transform 0.1s ease;
+  transition: color 0.2s ease;
 }
 
 .nav-tab.active {
-  color: var(--accent-crimson);
-  font-weight: 700;
-}
-
-.nav-tab:active {
-  transform: scale(0.95);
+  color: var(--accent-gold);
+  font-weight: 600;
 }
 
 .nav-tab-icon {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 /* Cards & Containers */
@@ -201,10 +201,9 @@ body {
   padding: 18px;
   margin-top: 16px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s ease;
 }
 
-/* Day Launch Cards */
+/* Day Cards */
 .day-card {
   position: relative;
   overflow: hidden;
@@ -217,13 +216,9 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 3px;
   height: 100%;
-  background: var(--accent-crimson);
-}
-
-.day-card:active {
-  transform: scale(0.98);
+  background: var(--accent-gold);
 }
 
 .day-header {
@@ -234,13 +229,13 @@ body {
 }
 
 .day-title {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .day-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--text-secondary);
   margin-bottom: 14px;
   line-height: 1.4;
@@ -254,42 +249,42 @@ body {
 }
 
 .tag {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   font-size: 0.75rem;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   font-weight: 500;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .tag-highlight {
-  background: rgba(225, 29, 72, 0.12);
-  color: var(--accent-coral);
-  border-color: rgba(225, 29, 72, 0.25);
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--accent-gold);
+  border-color: rgba(212, 175, 55, 0.25);
   font-weight: 600;
 }
 
 .btn-start-day {
   width: 100%;
-  background: var(--accent-crimson);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--accent-gold), #b89327);
+  color: #0f1013;
   border: none;
   padding: 12px;
   border-radius: var(--radius-md);
   font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
-.btn-start-day:hover, .btn-start-day:active {
-  background: var(--accent-crimson-hover);
+.btn-start-day:active {
+  opacity: 0.85;
 }
 
 /* Active Session Bar */
@@ -306,24 +301,37 @@ body {
 
 .timer-display {
   font-family: monospace;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--accent-coral);
+  color: var(--accent-gold);
 }
 
 .btn-finish-session {
   background: var(--accent-emerald);
-  color: #ffffff;
+  color: #0f1013;
   border: none;
   padding: 8px 16px;
   border-radius: var(--radius-pill);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
-.btn-finish-session:active {
-  transform: scale(0.95);
+/* Metronome Guidance Display (DOWN - 3 - 2 - 1 - UP) */
+.metronome-visual-bar {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.metronome-status-text {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  letter-spacing: 0.05em;
 }
 
 /* Superset Header & Exercise Container */
@@ -331,10 +339,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  font-size: 0.72rem;
+  background: rgba(226, 184, 151, 0.15);
+  color: var(--accent-rose);
+  border: 1px solid rgba(226, 184, 151, 0.3);
+  font-size: 0.7rem;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: var(--radius-sm);
@@ -347,18 +355,18 @@ body {
 }
 
 .exercise-name {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.02rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .exercise-comments {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  border-left: 3px solid var(--accent-crimson);
+  border-left: 2px solid var(--accent-gold);
   margin-bottom: 12px;
 }
 
@@ -367,8 +375,8 @@ body {
   display: grid;
   grid-template-columns: 44px 1fr 1fr 1fr 48px;
   gap: 8px;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   text-align: center;
@@ -384,17 +392,16 @@ body {
   padding: 4px;
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.02);
-  transition: all 0.2s ease;
 }
 
 .set-row.completed {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(52, 211, 153, 0.1);
   border-left: 3px solid var(--accent-emerald);
 }
 
 .set-label {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--text-secondary);
   text-align: center;
 }
@@ -406,8 +413,8 @@ body {
   padding: 8px 4px;
   border-radius: var(--radius-sm);
   text-align: center;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 500;
   width: 100%;
   outline: none;
   -webkit-user-select: text;
@@ -415,7 +422,7 @@ body {
 }
 
 .set-input:focus {
-  border-color: var(--accent-crimson);
+  border-color: var(--accent-gold);
 }
 
 .btn-check-set {
@@ -428,19 +435,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .set-row.completed .btn-check-set {
   background: var(--accent-emerald);
-  color: #ffffff;
+  color: #0f1013;
   border-color: var(--accent-emerald);
-}
-
-.btn-check-set:active {
-  transform: scale(0.9);
 }
 
 /* Floating Rest Timer Pill */
@@ -451,7 +453,7 @@ body {
   transform: translateX(-50%);
   z-index: 100;
   background: var(--bg-card-solid);
-  border: 1px solid var(--accent-crimson);
+  border: 1px solid var(--accent-gold);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   padding: 8px 18px;
   border-radius: var(--radius-pill);
@@ -462,9 +464,9 @@ body {
 
 .rest-timer-sec {
   font-family: monospace;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  color: var(--accent-coral);
+  color: var(--accent-gold);
 }
 
 .btn-timer-action {
@@ -493,7 +495,7 @@ body {
   color: var(--text-secondary);
   padding: 8px 14px;
   border-radius: var(--radius-pill);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -503,9 +505,9 @@ body {
 }
 
 .tool-chip.active {
-  background: rgba(225, 29, 72, 0.15);
-  color: var(--accent-coral);
-  border-color: var(--accent-crimson);
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
 }
 
 /* Modals & Overlays */
@@ -543,7 +545,7 @@ body {
 }
 
 .modal-title {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
@@ -565,7 +567,7 @@ body {
   border-radius: var(--radius-md);
   padding: 14px;
   font-family: monospace;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-word;
@@ -584,7 +586,7 @@ body {
   padding: 14px;
   border-radius: var(--radius-md);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -601,50 +603,12 @@ body {
   padding: 12px;
   border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-}
-
-/* Interval Display */
-.interval-display-box {
-  text-align: center;
-  padding: 24px 16px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-primary);
-  border: 1px solid var(--accent-crimson);
-  margin: 16px 0;
-}
-
-.interval-phase-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.interval-phase-title.HARD {
-  color: var(--accent-crimson);
-}
-
-.interval-phase-title.EASY {
-  color: var(--accent-emerald);
-}
-
-.interval-countdown {
-  font-size: 4rem;
-  font-family: monospace;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 12px;
-}
-
-.interval-rounds-count {
-  font-size: 1rem;
-  color: var(--text-secondary);
 }
 
 /* History Card */
@@ -659,14 +623,14 @@ body {
 .history-card-header {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--accent-coral);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--accent-gold);
   margin-bottom: 6px;
 }
 
 .history-card-date {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 

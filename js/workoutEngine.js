@@ -1,6 +1,6 @@
 /**
  * Workout Engine
- * Manages active session state, rest countdowns, interval timers & metronome
+ * Manages active session state, rest countdowns, interval timers & literal Metronome Voice/Beeps
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -19,21 +19,19 @@ export class WorkoutEngine {
     this.restTimerSec = 0;
     this.restTimerInterval = null;
 
-    // Interval Timer State (Day 1 Conditioning 30s/30s)
+    // Interval Timer State
     this.intervalTimerActive = false;
-    this.intervalPhase = "HARD"; // HARD (30s) or EASY (30s)
+    this.intervalPhase = "HARD";
     this.intervalSec = 30;
     this.intervalRound = 1;
     this.totalRounds = 8;
     this.intervalTimerInterval = null;
 
-    // Eccentric Metronome State
+    // Metronome State (Literal DOWN, 3, 2, 1, DRIVE UP!)
     this.metronomeActive = false;
-    this.metronomeSec = 3; // 3 sec lowering
+    this.metronomeStep = 0; // 0: DOWN, 1: 3, 2: 2, 3: 1, 4: UP
     this.metronomeInterval = null;
 
-    // Logged State per exercise and set
-    // Structure: { exId: { name: "", sets: [ { weight: 0, reps: 8, rpe: 7.5, completed: true } ] } }
     this.loggedData = {};
 
     this.initExerciseLogs();
@@ -70,7 +68,6 @@ export class WorkoutEngine {
     });
   }
 
-  // Session timer clock
   startSessionClock() {
     this.timerInterval = setInterval(() => {
       this.elapsedSeconds++;
@@ -88,7 +85,6 @@ export class WorkoutEngine {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  // Toggle set completed state
   toggleSetCompleted(exId, setIdx, weight, reps, rpe) {
     if (this.loggedData[exId] && this.loggedData[exId].sets[setIdx]) {
       const setObj = this.loggedData[exId].sets[setIdx];
@@ -97,7 +93,6 @@ export class WorkoutEngine {
       if (reps !== undefined) setObj.reps = reps;
       if (rpe !== undefined) setObj.rpe = rpe;
 
-      // Auto start rest timer on completing a set if enabled
       if (setObj.completed && this.onSetCompleted) {
         this.onSetCompleted(exId, setIdx);
       }
@@ -106,7 +101,6 @@ export class WorkoutEngine {
     }
   }
 
-  // Save current progress draft
   saveDraft() {
     StorageEngine.saveActiveWorkoutDraft({
       dayId: this.dayData.id,
@@ -117,7 +111,6 @@ export class WorkoutEngine {
     });
   }
 
-  // Rest Timer logic
   startRestTimer(seconds, onTick, onComplete) {
     this.stopRestTimer();
     this.restTimerSec = seconds;
@@ -142,7 +135,6 @@ export class WorkoutEngine {
     }
   }
 
-  // Conditioning Interval Timer (30s Hard / 30s Easy)
   startIntervalTimer(totalRounds = 8, onTick, onPhaseChange, onComplete) {
     this.stopIntervalTimer();
     this.intervalTimerActive = true;
@@ -164,7 +156,6 @@ export class WorkoutEngine {
           this.intervalSec = 30;
           if (onPhaseChange) onPhaseChange(this.intervalPhase, this.intervalRound, this.intervalSec);
         } else {
-          // Finished EASY phase, move to next round
           if (this.intervalRound >= this.totalRounds) {
             this.stopIntervalTimer();
             if (onComplete) onComplete();
@@ -187,25 +178,32 @@ export class WorkoutEngine {
     this.intervalTimerActive = false;
   }
 
-  // 3-Second Eccentric Metronome
+  /**
+   * Literal 3-Sec Metronome: DOWN -> 3 -> 2 -> 1 -> DRIVE UP!
+   */
   startMetronome(onTick) {
     this.stopMetronome();
     this.metronomeActive = true;
-    let count = 3;
-    if (onTick) onTick(count, "DOWN");
+    this.metronomeStep = 0; // 0: DOWN, 1: 3, 2: 2, 3: 1, 4: UP
 
-    this.metronomeInterval = setInterval(() => {
-      count--;
-      if (count > 0) {
-        if (onTick) onTick(count, "DOWN");
-      } else if (count === 0) {
-        this.playBeepSound(600);
-        if (onTick) onTick(0, "DRIVE!");
-      } else {
-        count = 3;
-        if (onTick) onTick(count, "DOWN");
-      }
-    }, 1000);
+    const sequence = [
+      { text: "DOWN ⬇️", speech: "Down" },
+      { text: "3", speech: "3" },
+      { text: "2", speech: "2" },
+      { text: "1", speech: "1" },
+      { text: "DRIVE UP! ⬆️", speech: "Up" }
+    ];
+
+    const triggerStep = () => {
+      const stepObj = sequence[this.metronomeStep];
+      if (onTick) onTick(stepObj.text, this.metronomeStep);
+      this.speakVoice(stepObj.speech);
+
+      this.metronomeStep = (this.metronomeStep + 1) % sequence.length;
+    };
+
+    triggerStep();
+    this.metronomeInterval = setInterval(triggerStep, 1000);
   }
 
   stopMetronome() {
@@ -216,7 +214,20 @@ export class WorkoutEngine {
     this.metronomeActive = false;
   }
 
-  // Play audio chime for timers
+  speakVoice(text) {
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop pending speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.2; // Slightly faster for workout rhythm
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (e) {
+      // Audio synthesis fallback
+    }
+  }
+
   playBeepSound(freq = 800) {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -234,12 +245,9 @@ export class WorkoutEngine {
       if (navigator.vibrate) {
         navigator.vibrate(200);
       }
-    } catch (e) {
-      // AudioContext blocked or not supported
-    }
+    } catch (e) {}
   }
 
-  // Finish session and generate log object
   finishSession(overallRpe = 8, coachNotes = "") {
     this.stopSessionClock();
     this.stopRestTimer();

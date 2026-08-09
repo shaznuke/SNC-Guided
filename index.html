@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SNC Guided | Coach Workout App</title>
+  <title>SNC Guided | Luxury Workout App</title>
   
   <!-- iOS & PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SNC Guided">
-  <meta name="theme-color" content="#0a0b0e">
+  <meta name="theme-color" content="#0f1013">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css">
+  <!-- Main Stylesheet with Cache-Buster v=3 -->
+  <link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 <body>
 
   <!-- Top App Header -->
   <header class="app-header">
     <div class="brand-badge">
-      <div class="brand-icon">🔥</div>
+      <div class="brand-icon">✨</div>
       <div class="brand-title">SNC GUIDED</div>
     </div>
     <div>
@@ -41,15 +41,15 @@
 
     <!-- View 1: Home Dashboard (Day Selector) -->
     <section id="viewHome">
-      <!-- Motivational Daily Quote Banner -->
-      <div class="motivational-banner">
-        <span class="quote-icon">⚡</span>
-        <span id="motivationalQuote" class="quote-text">NO SHORTCUTS. ONLY SWEAT.</span>
+      <!-- Inspirational Quote Card -->
+      <div class="inspirational-card">
+        <span class="quote-icon">✦</span>
+        <span id="motivationalQuote" class="quote-text">Consistency is the quiet bridge between goals and accomplishment.</span>
       </div>
 
       <div style="margin-top: 16px;">
-        <h2 style="font-size: 1.3rem;">Today's Session</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">Select a routine to log sets & generate coach updates</p>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Today's Routine</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Select your workout to log sets & generate coach updates</p>
       </div>
 
       <!-- Day Cards populated dynamically -->
@@ -61,7 +61,7 @@
       <div style="margin-top: 16px;">
         <div class="session-bar">
           <div>
-            <h3 id="sessionTitle" style="font-size: 1rem; color: #fff;">Day 1 Session</h3>
+            <h3 id="sessionTitle" style="font-size: 0.98rem; color: #fff; font-weight: 600;">Day 1 Session</h3>
             <div id="sessionTimer" class="timer-display">00:00</div>
           </div>
           <button id="btnFinishSession" class="btn-finish-session">
@@ -69,9 +69,20 @@
           </button>
         </div>
 
+        <!-- Metronome Visual Guidance Display (DOWN -> 3 -> 2 -> 1 -> UP) -->
+        <div id="metronomeVisualBar" class="metronome-visual-bar hidden">
+          <div id="metronomeStatusText" class="metronome-status-text">DOWN ⬇️</div>
+        </div>
+
         <!-- Quick Tools Bar -->
         <div class="tools-bar">
-          <div class="tool-chip" id="btnToggleMetronome">⏱ Metronome (3s)</div>
+          <div class="tool-chip" id="btnToggleMetronome">⏱ Voice Metronome (3s)</div>
+        </div>
+
+        <!-- Inspirational Session Prompt -->
+        <div class="inspirational-card" style="margin-top: 0; margin-bottom: 16px;">
+          <span class="quote-icon">💡</span>
+          <span class="quote-text">Focus on the 3-second eccentric lowering. Quality over load.</span>
         </div>
 
         <!-- Dynamic Exercise Set Cards -->
@@ -82,30 +93,42 @@
     <!-- View 3: Workout History & Coach Summaries -->
     <section id="viewHistory" class="hidden">
       <div style="margin-top: 16px; margin-bottom: 12px;">
-        <h2 style="font-size: 1.3rem;">Session History</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">Past completed workouts and coach updates</p>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Session History</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Every completed workout is proof of your progress</p>
       </div>
+
+      <div class="inspirational-card" style="margin-bottom: 16px;">
+        <span class="quote-icon">📈</span>
+        <span class="quote-text">"Progress is not always linear, but effort is always cumulative."</span>
+      </div>
+
       <div id="historyListContainer"></div>
     </section>
 
     <!-- View 4: Personal Records (PRs) -->
     <section id="viewPRs" class="hidden">
       <div style="margin-top: 16px; margin-bottom: 12px;">
-        <h2 style="font-size: 1.3rem;">Personal Records</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">Your heaviest weight and best reps logged</p>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Personal Records</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Your peak performance milestone log</p>
       </div>
+
+      <div class="inspirational-card" style="margin-bottom: 16px;">
+        <span class="quote-icon">🏆</span>
+        <span class="quote-text">"Strength isn't given; it's earned rep by rep."</span>
+      </div>
+
       <div id="prsListContainer"></div>
     </section>
 
     <!-- View 5: Settings & Backup -->
     <section id="viewSettings" class="hidden">
       <div style="margin-top: 16px;">
-        <h2 style="font-size: 1.3rem;">Settings & Data Backup</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">Export or import your workout history JSON</p>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Settings & Backup</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Export or restore your workout history JSON</p>
       </div>
 
       <div class="glass-card">
-        <h4 style="margin-bottom: 8px;">Backup Data</h4>
+        <h4 style="margin-bottom: 6px; font-weight: 600;">Backup Data</h4>
         <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px;">
           Download a JSON file of your logs to transfer to another device or save as backup.
         </p>
@@ -119,12 +142,12 @@
         </label>
       </div>
 
-      <div class="glass-card" style="border-color: rgba(255, 0, 60, 0.3);">
-        <h4 style="color: var(--accent-crimson); margin-bottom: 8px;">Reset App</h4>
+      <div class="glass-card" style="border-color: rgba(225, 29, 72, 0.2);">
+        <h4 style="color: var(--accent-rose); margin-bottom: 6px; font-weight: 600;">Reset App</h4>
         <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px;">
           Clear all saved session history and personal records.
         </p>
-        <button id="btnResetData" class="btn-start-day" style="background: linear-gradient(135deg, var(--accent-crimson), #990024);">
+        <button id="btnResetData" class="btn-start-day" style="background: rgba(225, 29, 72, 0.2); color: #fff; border: 1px solid rgba(225, 29, 72, 0.4);">
           ⚠️ Reset All Workout Data
         </button>
       </div>
@@ -143,24 +166,24 @@
   <div id="coachModal" class="modal-overlay hidden">
     <div class="modal-bottom-sheet">
       <div class="modal-header">
-        <h3 class="modal-title">🔥 SESSION CRUSHED!</h3>
+        <h3 class="modal-title">✨ Session Completed</h3>
         <button id="btnCloseCoachModal" class="btn-close-modal">✕</button>
       </div>
 
       <div style="margin-bottom: 12px;">
-        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);">Overall Session RPE (1 - 10)</label>
+        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Overall Session RPE (1 - 10)</label>
         <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
           <input type="range" id="rpeSlider" min="1" max="10" value="8" step="0.5" style="width: 100%;">
-          <span id="rpeValDisplay" style="font-size: 1.1rem; font-weight: 800; color: var(--accent-crimson);">8</span>
+          <span id="rpeValDisplay" style="font-size: 1.1rem; font-weight: 700; color: var(--accent-gold);">8</span>
         </div>
       </div>
 
       <div style="margin-bottom: 12px;">
-        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);">Notes for Coach</label>
+        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Notes for Coach</label>
         <textarea id="coachNotesInput" rows="2" class="set-input" style="text-align: left; padding: 10px; margin-top: 4px; resize: none;" placeholder="e.g., Felt strong on squats, 3s eccentric was smooth..."></textarea>
       </div>
 
-      <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; display: block;">Coach Update Preview:</label>
+      <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block;">Coach Update Preview:</label>
       <div id="reportPreview" class="report-preview-box"></div>
 
       <button id="btnShareWhatsApp" class="whatsapp-share-btn">
@@ -177,16 +200,16 @@
   <div id="intervalModal" class="modal-overlay hidden">
     <div class="modal-bottom-sheet" style="text-align: center;">
       <div class="modal-header">
-        <h3 class="modal-title">🔥 Conditioning Interval</h3>
+        <h3 class="modal-title">⚡ Conditioning Interval</h3>
       </div>
 
       <div class="interval-display-box">
-        <div id="intervalPhaseTitle" class="interval-phase-title HARD">🔥 GO HARD! (30s)</div>
+        <div id="intervalPhaseTitle" class="interval-phase-title HARD">⚡ GO HARD (30s)</div>
         <div id="intervalCountdown" class="interval-countdown">30</div>
         <div id="intervalRoundsText" class="interval-rounds-count">Round 1 of 8</div>
       </div>
 
-      <button id="btnStopInterval" class="btn-start-day" style="background: rgba(255,255,255,0.1);">
+      <button id="btnStopInterval" class="btn-start-day" style="background: rgba(255,255,255,0.08); color: #fff;">
         Stop Interval Timer
       </button>
     </div>
@@ -195,7 +218,7 @@
   <!-- Bottom Navigation Bar (iOS App Style) -->
   <nav class="bottom-nav">
     <button class="nav-tab active" data-target="home">
-      <span class="nav-tab-icon">🔥</span>
+      <span class="nav-tab-icon">✨</span>
       <span>Workouts</span>
     </button>
     <button class="nav-tab" data-target="history">
