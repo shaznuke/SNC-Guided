@@ -10,11 +10,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SNC Guided">
   <meta name="theme-color" content="#0f1013">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json?v=4">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
 
-  <!-- Main Stylesheet with Cache-Buster v=3 -->
-  <link rel="stylesheet" href="css/styles.css?v=3">
+  <!-- Main Stylesheet with Cache-Buster v=4 -->
+  <link rel="stylesheet" href="css/styles.css?v=4">
 </head>
 <body>
 
@@ -69,7 +70,7 @@
           </button>
         </div>
 
-        <!-- Metronome Visual Guidance Display (DOWN -> 3 -> 2 -> 1 -> UP) -->
+        <!-- Metronome Visual Guidance Display -->
         <div id="metronomeVisualBar" class="metronome-visual-bar hidden">
           <div id="metronomeStatusText" class="metronome-status-text">DOWN ⬇️</div>
         </div>
@@ -196,7 +197,7 @@
     </div>
   </div>
 
-  <!-- Modal: Interval Timer (Day 1 Conditioning) -->
+  <!-- Modal: Interval Timer -->
   <div id="intervalModal" class="modal-overlay hidden">
     <div class="modal-bottom-sheet" style="text-align: center;">
       <div class="modal-header">
@@ -215,7 +216,7 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation Bar (iOS App Style) -->
+  <!-- Bottom Navigation Bar -->
   <nav class="bottom-nav">
     <button class="nav-tab active" data-target="home">
       <span class="nav-tab-icon">✨</span>
@@ -235,7 +236,6 @@
     </button>
   </nav>
 
-  <!-- Main JavaScript Module -->
   <script type="module" src="js/app.js"></script>
 
 </body>
