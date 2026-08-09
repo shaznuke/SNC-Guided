@@ -1,6 +1,6 @@
 /**
  * Workout Engine
- * Manages active session state, rest countdowns, interval timers & Web Audio + Speech for DOWN, 3, 2, 1, UP
+ * Manages active session state, rest countdowns, interval timers & iOS-Safari Unlocked Audio Metronome
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -15,8 +15,9 @@ export class WorkoutEngine {
     this.elapsedSeconds = 0;
     this.timerInterval = null;
 
-    // Audio Context Unlocked state for iOS Safari
+    // Audio Context for Web Audio API
     this.audioCtx = null;
+    this.audioUnlocked = false;
 
     // Rest Timer State
     this.restTimerSec = 0;
@@ -30,9 +31,9 @@ export class WorkoutEngine {
     this.totalRounds = 8;
     this.intervalTimerInterval = null;
 
-    // Metronome State (Literal DOWN, 3, 2, 1, DRIVE UP!)
+    // Metronome State (DOWN -> 3 -> 2 -> 1 -> UP)
     this.metronomeActive = false;
-    this.metronomeStep = 0; // 0: DOWN, 1: 3, 2: 2, 3: 1, 4: UP
+    this.metronomeStep = 0;
     this.metronomeInterval = null;
 
     this.loggedData = {};
@@ -41,17 +42,42 @@ export class WorkoutEngine {
     this.startSessionClock();
   }
 
-  initAudioContext() {
-    if (!this.audioCtx) {
-      try {
+  /**
+   * CRITICAL FOR iOS SAFARI:
+   * Must be called directly inside the button click/tap event handler call stack!
+   */
+  unlockIOSAudio() {
+    try {
+      if (!this.audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) {
           this.audioCtx = new AudioContextClass();
-          if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
-          }
         }
-      } catch (e) {}
+      }
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+
+      // Play a tiny silent buffer to force iOS WebKit to unlock audio
+      if (this.audioCtx) {
+        const buffer = this.audioCtx.createBuffer(1, 1, 22050);
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.audioCtx.destination);
+        source.start(0);
+      }
+
+      // Prime Speech Synthesis on iOS
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+        const dummy = new SpeechSynthesisUtterance('');
+        dummy.volume = 0.01;
+        window.speechSynthesis.speak(dummy);
+      }
+
+      this.audioUnlocked = true;
+    } catch (e) {
+      console.warn("Audio unlock warning", e);
     }
   }
 
@@ -139,7 +165,7 @@ export class WorkoutEngine {
 
       if (this.restTimerSec <= 0) {
         this.stopRestTimer();
-        this.playAudioPitch(880, 0.4);
+        this.playTone(880, 0.4);
         if (onComplete) onComplete();
       }
     }, 1000);
@@ -167,7 +193,7 @@ export class WorkoutEngine {
       if (onTick) onTick(this.intervalSec, this.intervalPhase, this.intervalRound);
 
       if (this.intervalSec <= 0) {
-        this.playAudioPitch(1000, 0.3);
+        this.playTone(1000, 0.3);
         if (this.intervalPhase === "HARD") {
           this.intervalPhase = "EASY";
           this.intervalSec = 30;
@@ -196,16 +222,16 @@ export class WorkoutEngine {
   }
 
   /**
-   * Literal Audio & Voice Metronome: DOWN -> 3 -> 2 -> 1 -> UP!
+   * Metronome Sequence: DOWN -> 3 -> 2 -> 1 -> DRIVE UP!
    */
   startMetronome(onTick) {
-    this.initAudioContext();
+    this.unlockIOSAudio();
     this.stopMetronome();
     this.metronomeActive = true;
     this.metronomeStep = 0;
 
     const steps = [
-      { text: "DOWN ⬇️", speech: "Down", pitch: 300 },
+      { text: "DOWN ⬇️", speech: "Down", pitch: 260 },
       { text: "3", speech: "Three", pitch: 440 },
       { text: "2", speech: "Two", pitch: 520 },
       { text: "1", speech: "One", pitch: 660 },
@@ -216,10 +242,10 @@ export class WorkoutEngine {
       const current = steps[this.metronomeStep];
       if (onTick) onTick(current.text, this.metronomeStep);
 
-      // Play audio tone
-      this.playAudioPitch(current.pitch, 0.15);
+      // 1. Play Tone via Web Audio
+      this.playTone(current.pitch, 0.2);
 
-      // Speak voice utterance
+      // 2. Speak Voice via SpeechSynthesis
       this.speakVoice(current.speech);
 
       this.metronomeStep = (this.metronomeStep + 1) % steps.length;
@@ -245,6 +271,7 @@ export class WorkoutEngine {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
         utterance.rate = 1.3;
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
@@ -253,18 +280,20 @@ export class WorkoutEngine {
     } catch (e) {}
   }
 
-  playAudioPitch(freq = 440, duration = 0.15) {
+  playTone(freq = 440, duration = 0.2) {
     try {
-      this.initAudioContext();
       if (!this.audioCtx) return;
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
 
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
 
-      osc.type = 'sine';
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
 
-      gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
 
       osc.connect(gain);

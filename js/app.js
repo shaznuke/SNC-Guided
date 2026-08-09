@@ -1,6 +1,6 @@
 /**
  * Main Application Orchestrator & View Controller
- * Luxury Minimalist Theme + Voice/Visual Metronome + Peppered Inspirational Quotes
+ * iOS-Safari Audio Unlocked Metronome + Luxury Minimalist Theme
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -174,10 +174,13 @@ class AppController {
       });
     }
 
-    // Toggle Voice & Visual Metronome (DOWN -> 3 -> 2 -> 1 -> UP)
+    // Toggle Voice & Visual Metronome (Explicit iOS Audio Unlock on Click)
     if (this.btnToggleMetronome) {
       this.btnToggleMetronome.addEventListener("click", () => {
         if (this.activeWorkout) {
+          // CRITICAL: Unlock Audio Context inside explicit user click event handler!
+          this.activeWorkout.unlockIOSAudio();
+
           if (this.activeWorkout.metronomeActive) {
             this.activeWorkout.stopMetronome();
             this.btnToggleMetronome.classList.remove("active");
