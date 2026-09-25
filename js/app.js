@@ -1,12 +1,17 @@
 /**
  * Main Application Orchestrator & View Controller
- * iOS-Safari Audio Unlocked Metronome + Luxury Minimalist Theme
+ * Phase 2 Program, Progressive Engine, Excel Exporter, AI Nutrition & WHOOP Integration
  */
 
 import { PROGRAM_DATA } from './programData.js';
 import { StorageEngine } from './storage.js';
 import { WorkoutEngine } from './workoutEngine.js';
 import { CoachUpdater } from './coachUpdater.js';
+import { ProgressiveEngine } from './progressiveEngine.js';
+import { ExcelExporter } from './excelExporter.js';
+import { NutritionEngine } from './nutritionEngine.js';
+import { AIVisionEstimator } from './aiVisionEstimator.js';
+import { WhoopTracker } from './whoopTracker.js';
 
 const INSPIRATIONAL_QUOTES = [
   "Consistency is the quiet bridge between goals and accomplishment.",
@@ -32,6 +37,7 @@ class AppController {
   }
 
   initDOMReferences() {
+    this.programSelect = document.getElementById("programSelect");
     this.weekSelect = document.getElementById("weekSelect");
     this.navTabs = document.querySelectorAll(".nav-tab");
     this.motivationalQuote = document.getElementById("motivationalQuote");
@@ -39,13 +45,15 @@ class AppController {
     this.viewHome = document.getElementById("viewHome");
     this.viewActiveSession = document.getElementById("viewActiveSession");
     this.viewHistory = document.getElementById("viewHistory");
-    this.viewPRs = document.getElementById("viewPRs");
+    this.viewNutrition = document.getElementById("viewNutrition");
+    this.viewWhoop = document.getElementById("viewWhoop");
     this.viewSettings = document.getElementById("viewSettings");
 
     this.dayCardsContainer = document.getElementById("dayCardsContainer");
     this.sessionExercisesContainer = document.getElementById("sessionExercisesContainer");
     this.historyListContainer = document.getElementById("historyListContainer");
-    this.prsListContainer = document.getElementById("prsListContainer");
+
+    this.homeProgramTitle = document.getElementById("homeProgramTitle");
 
     this.sessionTitle = document.getElementById("sessionTitle");
     this.sessionTimer = document.getElementById("sessionTimer");
@@ -67,16 +75,45 @@ class AppController {
     this.rpeSlider = document.getElementById("rpeSlider");
     this.rpeValDisplay = document.getElementById("rpeValDisplay");
 
-    this.intervalModal = document.getElementById("intervalModal");
-    this.intervalPhaseTitle = document.getElementById("intervalPhaseTitle");
-    this.intervalCountdown = document.getElementById("intervalCountdown");
-    this.intervalRoundsText = document.getElementById("intervalRoundsText");
-    this.btnStopInterval = document.getElementById("btnStopInterval");
-
     this.btnToggleMetronome = document.getElementById("btnToggleMetronome");
 
+    // Excel Export
+    this.btnExportExcelCoach = document.getElementById("btnExportExcelCoach");
+
+    // WHOOP References
+    this.whoopHeaderBanner = document.getElementById("whoopHeaderBanner");
+    this.whoopHeaderTitle = document.getElementById("whoopHeaderTitle");
+    this.whoopHeaderAdvice = document.getElementById("whoopHeaderAdvice");
+    this.whoopZoneBadge = document.getElementById("whoopZoneBadge");
+    this.whoopAdviceText = document.getElementById("whoopAdviceText");
+    this.whoopRecoveryInput = document.getElementById("whoopRecoveryInput");
+    this.whoopStrainInput = document.getElementById("whoopStrainInput");
+    this.whoopSleepInput = document.getElementById("whoopSleepInput");
+    this.btnSaveWhoop = document.getElementById("btnSaveWhoop");
+
+    // Nutrition References
+    this.bmrValueDisplay = document.getElementById("bmrValueDisplay");
+    this.tdeeValueDisplay = document.getElementById("tdeeValueDisplay");
+    this.calsProgressText = document.getElementById("calsProgressText");
+    this.calsProgressBar = document.getElementById("calsProgressBar");
+    this.proteinProgressText = document.getElementById("proteinProgressText");
+    this.carbsProgressText = document.getElementById("carbsProgressText");
+    this.fatsProgressText = document.getElementById("fatsProgressText");
+    this.mealPhotoInput = document.getElementById("mealPhotoInput");
+    this.mealsListContainer = document.getElementById("mealsListContainer");
+    this.btnEditBMR = document.getElementById("btnEditBMR");
+    this.bmrModal = document.getElementById("bmrModal");
+    this.btnCloseBMRModal = document.getElementById("btnCloseBMRModal");
+    this.bmrWeightInput = document.getElementById("bmrWeightInput");
+    this.bmrHeightInput = document.getElementById("bmrHeightInput");
+    this.bmrAgeInput = document.getElementById("bmrAgeInput");
+    this.bmrActivityInput = document.getElementById("bmrActivityInput");
+    this.btnCalculateBMR = document.getElementById("btnCalculateBMR");
+
+    // Settings
+    this.geminiApiKeyInput = document.getElementById("geminiApiKeyInput");
+    this.btnSaveApiKey = document.getElementById("btnSaveApiKey");
     this.btnExportData = document.getElementById("btnExportData");
-    this.importFileInput = document.getElementById("importFileInput");
     this.btnResetData = document.getElementById("btnResetData");
   }
 
@@ -89,6 +126,16 @@ class AppController {
   }
 
   bindEvents() {
+    // Program Selector
+    if (this.programSelect) {
+      this.programSelect.value = PROGRAM_DATA.getActiveProgram().id;
+      this.programSelect.addEventListener("change", (e) => {
+        PROGRAM_DATA.setActiveProgram(e.target.value);
+        this.renderHome();
+      });
+    }
+
+    // Week Switcher
     if (this.weekSelect) {
       this.weekSelect.value = this.currentWeek.toString();
       this.weekSelect.addEventListener("change", (e) => {
@@ -98,6 +145,7 @@ class AppController {
       });
     }
 
+    // Navigation Tabs
     this.navTabs.forEach((tab) => {
       tab.addEventListener("click", () => {
         const targetView = tab.getAttribute("data-target");
@@ -105,6 +153,94 @@ class AppController {
       });
     });
 
+    // Excel Export
+    if (this.btnExportExcelCoach) {
+      this.btnExportExcelCoach.addEventListener("click", () => {
+        ExcelExporter.exportCoachSpreadsheet();
+      });
+    }
+
+    // WHOOP Banner & Save
+    if (this.whoopHeaderBanner) {
+      this.whoopHeaderBanner.addEventListener("click", () => this.switchTab("whoop"));
+    }
+    if (this.btnSaveWhoop) {
+      this.btnSaveWhoop.addEventListener("click", () => {
+        const data = WhoopTracker.saveTodayWhoopData({
+          recoveryScore: this.whoopRecoveryInput ? this.whoopRecoveryInput.value : 78,
+          dayStrain: this.whoopStrainInput ? this.whoopStrainInput.value : 12.4,
+          sleepPerformance: this.whoopSleepInput ? this.whoopSleepInput.value : 85
+        });
+        this.renderWhoop();
+        alert("✓ WHOOP metrics saved!");
+      });
+    }
+
+    // Nutrition & AI Photo Scanner
+    if (this.btnEditBMR) {
+      this.btnEditBMR.addEventListener("click", () => {
+        if (this.bmrModal) this.bmrModal.classList.remove("hidden");
+      });
+    }
+    if (this.btnCloseBMRModal) {
+      this.btnCloseBMRModal.addEventListener("click", () => {
+        if (this.bmrModal) this.bmrModal.classList.add("hidden");
+      });
+    }
+    if (this.btnCalculateBMR) {
+      this.btnCalculateBMR.addEventListener("click", () => {
+        NutritionEngine.saveNutritionSettings({
+          weightKg: this.bmrWeightInput ? this.bmrWeightInput.value : 62,
+          heightCm: this.bmrHeightInput ? this.bmrHeightInput.value : 165,
+          age: this.bmrAgeInput ? this.bmrAgeInput.value : 26,
+          gender: "female",
+          activityLevel: this.bmrActivityInput ? this.bmrActivityInput.value : 1.55,
+          targetProtein: 130,
+          targetCarbs: 200,
+          targetFat: 55
+        });
+        if (this.bmrModal) this.bmrModal.classList.add("hidden");
+        this.renderNutrition();
+      });
+    }
+
+    if (this.mealPhotoInput) {
+      this.mealPhotoInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            const base64 = event.target.result;
+            alert("📸 AI is analyzing your meal photo...");
+            const result = await AIVisionEstimator.analyzeMealPhoto(base64);
+
+            NutritionEngine.addMealLog({
+              name: result.name,
+              calories: result.calories,
+              protein: result.protein,
+              carbs: result.carbs,
+              fat: result.fat,
+              photoUrl: base64
+            });
+
+            this.renderNutrition();
+            alert(`✓ AI Logged: ${result.name} (${result.calories} kcal)`);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Gemini API Key Save
+    if (this.btnSaveApiKey && this.geminiApiKeyInput) {
+      this.geminiApiKeyInput.value = AIVisionEstimator.getStoredApiKey();
+      this.btnSaveApiKey.addEventListener("click", () => {
+        AIVisionEstimator.setStoredApiKey(this.geminiApiKeyInput.value);
+        alert("✓ Gemini API Key saved!");
+      });
+    }
+
+    // Workout Controls
     if (this.btnSkipRest) {
       this.btnSkipRest.addEventListener("click", () => {
         if (this.activeWorkout) this.activeWorkout.stopRestTimer();
@@ -167,18 +303,9 @@ class AppController {
       });
     }
 
-    if (this.btnStopInterval) {
-      this.btnStopInterval.addEventListener("click", () => {
-        if (this.activeWorkout) this.activeWorkout.stopIntervalTimer();
-        this.intervalModal.classList.add("hidden");
-      });
-    }
-
-    // Toggle Voice & Visual Metronome (Explicit iOS Audio Unlock on Click)
     if (this.btnToggleMetronome) {
       this.btnToggleMetronome.addEventListener("click", () => {
         if (this.activeWorkout) {
-          // CRITICAL: Unlock Audio Context inside explicit user click event handler!
           this.activeWorkout.unlockIOSAudio();
 
           if (this.activeWorkout.metronomeActive) {
@@ -205,23 +332,6 @@ class AppController {
       this.btnExportData.addEventListener("click", () => StorageEngine.exportBackupJSON());
     }
 
-    if (this.importFileInput) {
-      this.importFileInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const res = StorageEngine.importBackupJSON(event.target.result);
-            alert(res.message);
-            if (res.success) {
-              location.reload();
-            }
-          };
-          reader.readAsText(file);
-        }
-      });
-    }
-
     if (this.btnResetData) {
       this.btnResetData.addEventListener("click", () => {
         if (confirm("Are you sure you want to reset all workout history and PRs? This cannot be undone.")) {
@@ -243,7 +353,7 @@ class AppController {
       }
     });
 
-    [this.viewHome, this.viewActiveSession, this.viewHistory, this.viewPRs, this.viewSettings].forEach((v) => {
+    [this.viewHome, this.viewActiveSession, this.viewHistory, this.viewNutrition, this.viewWhoop, this.viewSettings].forEach((v) => {
       if (v) v.classList.add("hidden");
     });
 
@@ -253,9 +363,12 @@ class AppController {
     } else if (tabName === "history") {
       this.viewHistory.classList.remove("hidden");
       this.renderHistory();
-    } else if (tabName === "prs") {
-      this.viewPRs.classList.remove("hidden");
-      this.renderPRs();
+    } else if (tabName === "nutrition") {
+      this.viewNutrition.classList.remove("hidden");
+      this.renderNutrition();
+    } else if (tabName === "whoop") {
+      this.viewWhoop.classList.remove("hidden");
+      this.renderWhoop();
     } else if (tabName === "settings") {
       this.viewSettings.classList.remove("hidden");
     } else if (tabName === "active") {
@@ -264,18 +377,35 @@ class AppController {
   }
 
   render() {
+    this.renderWhoopHeader();
     this.switchTab("home");
+  }
+
+  renderWhoopHeader() {
+    const wData = WhoopTracker.getTodayWhoopData();
+    const advice = WhoopTracker.getReadinessAdvice(wData.recoveryScore);
+    if (this.whoopHeaderTitle) this.whoopHeaderTitle.textContent = `WHOOP Recovery: ${wData.recoveryScore}% (${advice.zone} Zone)`;
+    if (this.whoopHeaderAdvice) this.whoopHeaderAdvice.textContent = advice.advice;
   }
 
   renderHome() {
     if (!this.dayCardsContainer) return;
     this.dayCardsContainer.innerHTML = "";
 
-    const targetInfo = PROGRAM_DATA.getWeekTarget(this.currentWeek);
+    const activeProg = PROGRAM_DATA.getActiveProgram();
+    const targetInfo = activeProg.getWeekTarget(this.currentWeek);
 
-    PROGRAM_DATA.days.forEach((day) => {
+    if (this.homeProgramTitle) {
+      this.homeProgramTitle.textContent = activeProg.title;
+    }
+
+    activeProg.days.forEach((day) => {
       const card = document.createElement("div");
       card.className = "glass-card day-card";
+
+      const repsLabel = targetInfo.reps && Array.isArray(targetInfo.reps)
+        ? "Pyramid (15,12,9,6)"
+        : `${targetInfo.reps} Reps`;
 
       card.innerHTML = `
         <div class="day-header">
@@ -283,9 +413,8 @@ class AppController {
         </div>
         <div class="day-subtitle">${day.subtitle}</div>
         <div class="day-meta-tags">
-          <span class="tag tag-highlight">Week ${this.currentWeek} Target: ${targetInfo.reps} Reps</span>
-          <span class="tag">Holds: ${targetInfo.holdSec}s</span>
-          <span class="tag">3 Sets</span>
+          <span class="tag tag-highlight">Week ${this.currentWeek}: ${repsLabel}</span>
+          <span class="tag">3s Eccentric Focus</span>
         </div>
         <button class="btn-start-day">
           <span>Start Session</span>
@@ -346,22 +475,26 @@ class AppController {
           commentsHTML = `<div class="exercise-comments">💡 ${ex.comments}</div>`;
         }
 
-        let extraToolsHTML = "";
-        if (ex.hasIntervalTimer) {
-          extraToolsHTML = `
-            <button class="btn-start-day" style="margin-bottom: 12px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose)); color: #0f1013;" id="btnLaunchInterval_${ex.id}">
-              ⏱ Launch 30s/30s Interval Timer (8 Rounds)
-            </button>
-          `;
-        }
-
         const loggedEx = this.activeWorkout.loggedData[ex.id];
 
         let setsRowsHTML = loggedEx.sets.map((setObj, sIdx) => {
+          // Calculate Progressive Suggestion for setIdx
+          const sug = ProgressiveEngine.getSetSuggestion(ex.id, this.currentWeek, sIdx, setObj.reps);
+
+          let sugBannerHTML = "";
+          if (sug.hasData) {
+            sugBannerHTML = `
+              <div style="grid-column: 1 / -1; font-size: 0.72rem; color: var(--accent-gold); background: rgba(212, 175, 55, 0.08); padding: 4px 8px; border-radius: var(--radius-sm); margin-bottom: 4px;">
+                💡 ${sug.text}
+              </div>
+            `;
+          }
+
           return `
+            ${sugBannerHTML}
             <div class="set-row ${setObj.completed ? 'completed' : ''}" id="setRow_${ex.id}_${sIdx}">
               <div class="set-label">Set ${setObj.setNum}</div>
-              <input type="number" step="0.5" class="set-input" placeholder="kg" value="${setObj.weight}" id="inputW_${ex.id}_${sIdx}">
+              <input type="number" step="0.5" class="set-input" placeholder="${sug.suggestedWeight ? sug.suggestedWeight + 'kg' : 'kg'}" value="${setObj.weight}" id="inputW_${ex.id}_${sIdx}">
               <input type="text" class="set-input" placeholder="reps" value="${setObj.reps}" id="inputR_${ex.id}_${sIdx}">
               <input type="text" class="set-input" placeholder="RPE" value="${setObj.rpe}" id="inputRPE_${ex.id}_${sIdx}">
               <button class="btn-check-set" id="btnCheck_${ex.id}_${sIdx}">
@@ -377,7 +510,6 @@ class AppController {
             <div class="exercise-name">${ex.name}</div>
           </div>
           ${commentsHTML}
-          ${extraToolsHTML}
           <div class="sets-header-row">
             <span>SET</span>
             <span>KG</span>
@@ -417,40 +549,69 @@ class AppController {
             });
           }
         });
-
-        if (ex.hasIntervalTimer) {
-          const btnLaunch = exCard.querySelector(`#btnLaunchInterval_${ex.id}`);
-          if (btnLaunch) {
-            btnLaunch.addEventListener("click", () => {
-              this.launchIntervalTimer();
-            });
-          }
-        }
       });
     });
   }
 
-  launchIntervalTimer() {
-    if (!this.activeWorkout) return;
-    this.intervalModal.classList.remove("hidden");
+  renderNutrition() {
+    const settings = NutritionEngine.getNutritionSettings();
+    const totals = NutritionEngine.getTodayTotals();
 
-    this.activeWorkout.startIntervalTimer(
-      8,
-      (secLeft, phase, round) => {
-        this.intervalCountdown.textContent = secLeft.toString().padStart(2, '0');
-        this.intervalRoundsText.textContent = `Round ${round} of 8`;
-      },
-      (phase, round, secLeft) => {
-        this.intervalPhaseTitle.textContent = phase === "HARD" ? "⚡ GO HARD (30s)" : "🧊 EASY RECOVERY (30s)";
-        this.intervalPhaseTitle.className = `interval-phase-title ${phase}`;
-        this.intervalCountdown.textContent = secLeft.toString().padStart(2, '0');
-      },
-      () => {
-        this.intervalPhaseTitle.textContent = "✨ WORKOUT FINISHED!";
-        this.intervalCountdown.textContent = "00";
-        setTimeout(() => this.intervalModal.classList.add("hidden"), 2000);
+    if (this.bmrValueDisplay) this.bmrValueDisplay.textContent = `${settings.bmr.toLocaleString()} kcal`;
+    if (this.tdeeValueDisplay) this.tdeeValueDisplay.textContent = `${settings.tdee.toLocaleString()} kcal`;
+
+    if (this.calsProgressText) this.calsProgressText.textContent = `${totals.calories} / ${settings.tdee} kcal`;
+    if (this.calsProgressBar) {
+      const pct = Math.min(100, Math.round((totals.calories / settings.tdee) * 100));
+      this.calsProgressBar.style.width = `${pct}%`;
+    }
+
+    if (this.proteinProgressText) this.proteinProgressText.textContent = `${totals.protein} / ${settings.targetProtein}g`;
+    if (this.carbsProgressText) this.carbsProgressText.textContent = `${totals.carbs} / ${settings.targetCarbs}g`;
+    if (this.fatsProgressText) this.fatsProgressText.textContent = `${totals.fat} / ${settings.targetFat}g`;
+
+    // Render Meals List
+    if (this.mealsListContainer) {
+      this.mealsListContainer.innerHTML = "";
+      const meals = NutritionEngine.getTodayMealLogs();
+
+      if (meals.length === 0) {
+        this.mealsListContainer.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 20px 0; font-size: 0.85rem;">
+            No meals logged today yet. Snap a meal photo above!
+          </div>
+        `;
+        return;
       }
-    );
+
+      meals.forEach((m) => {
+        const card = document.createElement("div");
+        card.className = "history-card";
+        card.innerHTML = `
+          <div class="history-card-header">
+            <span>🍽 ${m.name}</span>
+            <span style="color: var(--accent-gold);">${m.calories} kcal</span>
+          </div>
+          <div class="history-card-date">⏱ ${m.time} | P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g</div>
+        `;
+        this.mealsListContainer.appendChild(card);
+      });
+    }
+  }
+
+  renderWhoop() {
+    const wData = WhoopTracker.getTodayWhoopData();
+    const advice = WhoopTracker.getReadinessAdvice(wData.recoveryScore);
+
+    if (this.whoopZoneBadge) {
+      this.whoopZoneBadge.textContent = advice.title;
+      this.whoopZoneBadge.style.color = advice.color;
+    }
+    if (this.whoopAdviceText) this.whoopAdviceText.textContent = advice.advice;
+
+    if (this.whoopRecoveryInput) this.whoopRecoveryInput.value = wData.recoveryScore;
+    if (this.whoopStrainInput) this.whoopStrainInput.value = wData.dayStrain;
+    if (this.whoopSleepInput) this.whoopSleepInput.value = wData.sleepPerformance;
   }
 
   showFloatingRestTimer(secLeft) {
@@ -521,38 +682,6 @@ class AppController {
       `;
 
       this.historyListContainer.appendChild(card);
-    });
-  }
-
-  renderPRs() {
-    if (!this.prsListContainer) return;
-    this.prsListContainer.innerHTML = "";
-
-    const prs = StorageEngine.getPRs();
-    const entries = Object.entries(prs);
-
-    if (entries.length === 0) {
-      this.prsListContainer.innerHTML = `
-        <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
-          <div style="font-size: 2.2rem; margin-bottom: 8px;">🏆</div>
-          <p>No Personal Records logged yet.</p>
-          <p style="font-size: 0.82rem;">Log your exercise weights to track strength gains across 6 weeks!</p>
-        </div>
-      `;
-      return;
-    }
-
-    entries.forEach(([exId, pr]) => {
-      const card = document.createElement("div");
-      card.className = "history-card";
-      card.innerHTML = `
-        <div class="history-card-header">
-          <span>🏆 ${pr.exerciseName}</span>
-          <span style="color: var(--accent-gold); font-size: 1.05rem;">${pr.maxWeight} kg</span>
-        </div>
-        <div class="history-card-date">Best Reps: ${pr.bestReps} reps | Week ${pr.week} (${pr.date})</div>
-      `;
-      this.prsListContainer.appendChild(card);
     });
   }
 

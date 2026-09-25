@@ -1,6 +1,6 @@
 /**
  * Workout Engine
- * Manages active session state, rest countdowns, interval timers & iOS-Safari Unlocked Audio Metronome
+ * Supports Phase 1 & Phase 2 (Pyramid Loading 15-12-9-6 Reps), Progressive Suggestions & Audio Metronome
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -8,22 +8,20 @@ import { StorageEngine } from './storage.js';
 
 export class WorkoutEngine {
   constructor(dayId, weekNum) {
-    this.dayData = PROGRAM_DATA.days.find((d) => d.id === dayId);
+    this.activeProgram = PROGRAM_DATA.getActiveProgram();
+    this.dayData = this.activeProgram.days.find((d) => d.id === dayId);
     this.weekNum = weekNum;
-    this.targetInfo = PROGRAM_DATA.getWeekTarget(weekNum);
+    this.targetInfo = this.activeProgram.getWeekTarget(weekNum);
     this.startTime = Date.now();
     this.elapsedSeconds = 0;
     this.timerInterval = null;
 
-    // Audio Context for Web Audio API
     this.audioCtx = null;
     this.audioUnlocked = false;
 
-    // Rest Timer State
     this.restTimerSec = 0;
     this.restTimerInterval = null;
 
-    // Interval Timer State
     this.intervalTimerActive = false;
     this.intervalPhase = "HARD";
     this.intervalSec = 30;
@@ -31,7 +29,6 @@ export class WorkoutEngine {
     this.totalRounds = 8;
     this.intervalTimerInterval = null;
 
-    // Metronome State (DOWN -> 3 -> 2 -> 1 -> UP)
     this.metronomeActive = false;
     this.metronomeStep = 0;
     this.metronomeInterval = null;
@@ -42,10 +39,6 @@ export class WorkoutEngine {
     this.startSessionClock();
   }
 
-  /**
-   * CRITICAL FOR iOS SAFARI:
-   * Must be called directly inside the button click/tap event handler call stack!
-   */
   unlockIOSAudio() {
     try {
       if (!this.audioCtx) {
@@ -58,7 +51,6 @@ export class WorkoutEngine {
         this.audioCtx.resume();
       }
 
-      // Play a tiny silent buffer to force iOS WebKit to unlock audio
       if (this.audioCtx) {
         const buffer = this.audioCtx.createBuffer(1, 1, 22050);
         const source = this.audioCtx.createBufferSource();
@@ -67,7 +59,6 @@ export class WorkoutEngine {
         source.start(0);
       }
 
-      // Prime Speech Synthesis on iOS
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume();
         const dummy = new SpeechSynthesisUtterance('');
@@ -76,21 +67,25 @@ export class WorkoutEngine {
       }
 
       this.audioUnlocked = true;
-    } catch (e) {
-      console.warn("Audio unlock warning", e);
-    }
+    } catch (e) {}
   }
 
   initExerciseLogs() {
     this.dayData.sections.forEach((section) => {
       section.exercises.forEach((ex) => {
         const totalSets = ex.sets || 1;
-        const defaultReps = ex.isDynamicReps
-          ? this.targetInfo.reps
-          : (ex.isHold ? `${this.targetInfo.holdSec}s` : ex.reps);
 
         const setsArray = [];
         for (let i = 0; i < totalSets; i++) {
+          let defaultReps = ex.reps;
+          if (ex.pyramidReps && Array.isArray(ex.pyramidReps)) {
+            defaultReps = ex.pyramidReps[i] || 10;
+          } else if (ex.isDynamicReps) {
+            defaultReps = this.targetInfo.reps;
+          } else if (ex.isHold) {
+            defaultReps = `${this.targetInfo.holdSec}s`;
+          }
+
           setsArray.push({
             setNum: i + 1,
             weight: "",
@@ -105,6 +100,7 @@ export class WorkoutEngine {
           name: ex.name,
           superset: ex.superset || null,
           supersetRole: ex.supersetRole || null,
+          pyramidReps: ex.pyramidReps || null,
           sets: setsArray
         };
       });
@@ -146,6 +142,7 @@ export class WorkoutEngine {
 
   saveDraft() {
     StorageEngine.saveActiveWorkoutDraft({
+      programId: this.activeProgram.id,
       dayId: this.dayData.id,
       weekNum: this.weekNum,
       elapsedSeconds: this.elapsedSeconds,
@@ -221,9 +218,6 @@ export class WorkoutEngine {
     this.intervalTimerActive = false;
   }
 
-  /**
-   * Metronome Sequence: DOWN -> 3 -> 2 -> 1 -> DRIVE UP!
-   */
   startMetronome(onTick) {
     this.unlockIOSAudio();
     this.stopMetronome();
@@ -242,10 +236,7 @@ export class WorkoutEngine {
       const current = steps[this.metronomeStep];
       if (onTick) onTick(current.text, this.metronomeStep);
 
-      // 1. Play Tone via Web Audio
       this.playTone(current.pitch, 0.2);
-
-      // 2. Speak Voice via SpeechSynthesis
       this.speakVoice(current.speech);
 
       this.metronomeStep = (this.metronomeStep + 1) % steps.length;
@@ -323,6 +314,7 @@ export class WorkoutEngine {
 
     const sessionLog = {
       id: `session_${Date.now()}`,
+      programId: this.activeProgram.id,
       dayId: this.dayData.id,
       dayName: this.dayData.name,
       week: this.weekNum,

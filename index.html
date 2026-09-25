@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SNC Guided | Luxury Workout App</title>
+  <title>SNC Guided 2.0 | Luxury Workout & Nutrition</title>
   
   <!-- iOS & PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SNC Guided">
   <meta name="theme-color" content="#0f1013">
-  <link rel="manifest" href="manifest.json?v=4">
+  <link rel="manifest" href="manifest.json?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
 
-  <!-- Main Stylesheet with Cache-Buster v=4 -->
-  <link rel="stylesheet" href="css/styles.css?v=4">
+  <!-- Main Stylesheet with Cache-Buster v=5 -->
+  <link rel="stylesheet" href="css/styles.css?v=5">
 </head>
 <body>
 
@@ -23,16 +23,22 @@
   <header class="app-header">
     <div class="brand-badge">
       <div class="brand-icon">✨</div>
-      <div class="brand-title">SNC GUIDED</div>
+      <div>
+        <div class="brand-title">SNC GUIDED</div>
+        <select id="programSelect" style="background: none; border: none; color: var(--accent-gold); font-size: 0.72rem; font-weight: 600; outline: none; cursor: pointer;">
+          <option value="phase2">Phase 2: Pyramid Loading</option>
+          <option value="phase1">Phase 1: Foundation</option>
+        </select>
+      </div>
     </div>
     <div>
       <select id="weekSelect" class="week-pill-select">
-        <option value="1">Week 1 (8 reps)</option>
-        <option value="2">Week 2 (8 reps)</option>
-        <option value="3">Week 3 (10 reps)</option>
-        <option value="4">Week 4 (10 reps)</option>
-        <option value="5">Week 5 (12 reps)</option>
-        <option value="6">Week 6 (12 reps)</option>
+        <option value="1">Week 1</option>
+        <option value="2">Week 2</option>
+        <option value="3">Week 3</option>
+        <option value="4">Week 4</option>
+        <option value="5">Week 5</option>
+        <option value="6">Week 6</option>
       </select>
     </div>
   </header>
@@ -40,8 +46,17 @@
   <!-- Main Content Container -->
   <main class="app-container">
 
-    <!-- View 1: Home Dashboard (Day Selector) -->
+    <!-- View 1: Home Dashboard (Day Selector & WHOOP Recovery Header) -->
     <section id="viewHome">
+      <!-- WHOOP Recovery Banner -->
+      <div id="whoopHeaderBanner" class="inspirational-card" style="border-color: var(--accent-emerald); cursor: pointer;">
+        <span class="quote-icon">🟢</span>
+        <div>
+          <div id="whoopHeaderTitle" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">WHOOP Recovery: 78% (Green Zone)</div>
+          <div id="whoopHeaderAdvice" style="font-size: 0.78rem; color: var(--text-secondary);">Primed for high performance! Push heavy today.</div>
+        </div>
+      </div>
+
       <!-- Inspirational Quote Card -->
       <div class="inspirational-card">
         <span class="quote-icon">✦</span>
@@ -49,8 +64,8 @@
       </div>
 
       <div style="margin-top: 16px;">
-        <h2 style="font-size: 1.2rem; font-weight: 600;">Today's Routine</h2>
-        <p style="font-size: 0.84rem; color: var(--text-secondary);">Select your workout to log sets & generate coach updates</p>
+        <h2 id="homeProgramTitle" style="font-size: 1.2rem; font-weight: 600;">Phase 2: Pyramid Loading</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Pyramid reps (15, 12, 9, 6). Add load week-on-week.</p>
       </div>
 
       <!-- Day Cards populated dynamically -->
@@ -80,74 +95,160 @@
           <div class="tool-chip" id="btnToggleMetronome">⏱ Voice Metronome (3s)</div>
         </div>
 
-        <!-- Inspirational Session Prompt -->
-        <div class="inspirational-card" style="margin-top: 0; margin-bottom: 16px;">
-          <span class="quote-icon">💡</span>
-          <span class="quote-text">Focus on the 3-second eccentric lowering. Quality over load.</span>
-        </div>
-
         <!-- Dynamic Exercise Set Cards -->
         <div id="sessionExercisesContainer"></div>
       </div>
     </section>
 
-    <!-- View 3: Workout History & Coach Summaries -->
+    <!-- View 3: Workout History & Excel Coach Exporter -->
     <section id="viewHistory" class="hidden">
-      <div style="margin-top: 16px; margin-bottom: 12px;">
-        <h2 style="font-size: 1.2rem; font-weight: 600;">Session History</h2>
-        <p style="font-size: 0.84rem; color: var(--text-secondary);">Every completed workout is proof of your progress</p>
-      </div>
-
-      <div class="inspirational-card" style="margin-bottom: 16px;">
-        <span class="quote-icon">📈</span>
-        <span class="quote-text">"Progress is not always linear, but effort is always cumulative."</span>
+      <div style="margin-top: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h2 style="font-size: 1.2rem; font-weight: 600;">Session History</h2>
+          <p style="font-size: 0.84rem; color: var(--text-secondary);">Export full 6-week grid for your coach</p>
+        </div>
+        <button id="btnExportExcelCoach" class="btn-start-day" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: var(--accent-gold); color: #0f1013;">
+          📊 Export Coach Excel
+        </button>
       </div>
 
       <div id="historyListContainer"></div>
     </section>
 
-    <!-- View 4: Personal Records (PRs) -->
-    <section id="viewPRs" class="hidden">
+    <!-- View 4: Nutrition, BMR & AI Meal Photo Logger -->
+    <section id="viewNutrition" class="hidden">
       <div style="margin-top: 16px; margin-bottom: 12px;">
-        <h2 style="font-size: 1.2rem; font-weight: 600;">Personal Records</h2>
-        <p style="font-size: 0.84rem; color: var(--text-secondary);">Your peak performance milestone log</p>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Nutrition & AI Meal Logger</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">BMR Calculator & AI Meal Photo Calorie Tracking</p>
       </div>
 
-      <div class="inspirational-card" style="margin-bottom: 16px;">
-        <span class="quote-icon">🏆</span>
-        <span class="quote-text">"Strength isn't given; it's earned rep by rep."</span>
+      <!-- BMR / TDEE Summary Card -->
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h4 style="font-size: 0.95rem; font-weight: 600;">🔥 BMR & Macro Targets</h4>
+          <button id="btnEditBMR" class="btn-timer-action">Edit BMR</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 12px;">
+          <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.72rem; color: var(--text-muted);">BASAL METABOLIC RATE</div>
+            <div id="bmrValueDisplay" style="font-size: 1.2rem; font-weight: 700; color: var(--accent-gold);">1,350 kcal</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.72rem; color: var(--text-muted);">TDEE MAINTENANCE</div>
+            <div id="tdeeValueDisplay" style="font-size: 1.2rem; font-weight: 700; color: var(--accent-emerald);">2,090 kcal</div>
+          </div>
+        </div>
+
+        <!-- Today's Macro Progress -->
+        <div style="margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+            <span>Calories Logged</span>
+            <span id="calsProgressText">0 / 2,090 kcal</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="calsProgressBar" style="background: var(--accent-gold); width: 0%; height: 100%;"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem; text-align: center;">
+          <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm);">
+            <div style="color: var(--text-muted);">PROTEIN</div>
+            <div id="proteinProgressText" style="font-weight: 700; color: var(--accent-rose);">0 / 130g</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm);">
+            <div style="color: var(--text-muted);">CARBS</div>
+            <div id="carbsProgressText" style="font-weight: 700; color: var(--accent-gold);">0 / 200g</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm);">
+            <div style="color: var(--text-muted);">FATS</div>
+            <div id="fatsProgressText" style="font-weight: 700; color: var(--accent-emerald);">0 / 55g</div>
+          </div>
+        </div>
       </div>
 
-      <div id="prsListContainer"></div>
+      <!-- AI Meal Scanner Section -->
+      <div class="glass-card">
+        <h4 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;">📸 AI Meal Photo Scanner</h4>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+          Take a photo of your meal. AI will analyze the dish and estimate calories & macros.
+        </p>
+
+        <label class="btn-start-day" style="cursor: pointer; background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose)); color: #0f1013;">
+          📷 Analyze Meal Photo
+          <input type="file" id="mealPhotoInput" accept="image/*" capture="environment" style="display: none;">
+        </label>
+      </div>
+
+      <!-- Meal History List -->
+      <div style="margin-top: 16px;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 10px;">Today's Logged Meals</h3>
+        <div id="mealsListContainer"></div>
+      </div>
     </section>
 
-    <!-- View 5: Settings & Backup -->
+    <!-- View 5: WHOOP Metrics & Readiness -->
+    <section id="viewWhoop" class="hidden">
+      <div style="margin-top: 16px; margin-bottom: 12px;">
+        <h2 style="font-size: 1.2rem; font-weight: 600;">WHOOP Performance</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Recovery Score, Strain & Sleep Performance</p>
+      </div>
+
+      <div class="glass-card">
+        <div id="whoopZoneBadge" style="font-size: 1.1rem; font-weight: 700; color: var(--accent-emerald); margin-bottom: 8px;">
+          🟢 GREEN ZONE RECOVERY (78%)
+        </div>
+        <p id="whoopAdviceText" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 16px;">
+          Your autonomic nervous system is fully primed! Push for new Personal Records today.
+        </p>
+
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">WHOOP Recovery Score (%)</label>
+          <input type="number" id="whoopRecoveryInput" class="set-input" value="78" min="0" max="100" style="text-align: left; padding: 10px;">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Day Strain (0 - 21)</label>
+          <input type="number" step="0.1" id="whoopStrainInput" class="set-input" value="12.4" min="0" max="21" style="text-align: left; padding: 10px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Sleep Performance (%)</label>
+          <input type="number" id="whoopSleepInput" class="set-input" value="85" min="0" max="100" style="text-align: left; padding: 10px;">
+        </div>
+
+        <button id="btnSaveWhoop" class="btn-start-day">
+          ✓ Save WHOOP Metrics
+        </button>
+      </div>
+    </section>
+
+    <!-- View 6: Settings & API Keys -->
     <section id="viewSettings" class="hidden">
       <div style="margin-top: 16px;">
-        <h2 style="font-size: 1.2rem; font-weight: 600;">Settings & Backup</h2>
-        <p style="font-size: 0.84rem; color: var(--text-secondary);">Export or restore your workout history JSON</p>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Settings & API Configuration</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">Manage AI keys & export coach spreadsheets</p>
+      </div>
+
+      <div class="glass-card">
+        <h4 style="margin-bottom: 6px; font-weight: 600;">🤖 Google Gemini AI API Key</h4>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">
+          Paste your Google AI Studio key below to enable live custom AI meal photo analysis.
+        </p>
+        <input type="password" id="geminiApiKeyInput" class="set-input" placeholder="AIzaSy..." style="text-align: left; padding: 10px; margin-bottom: 10px;">
+        <button id="btnSaveApiKey" class="btn-timer-action" style="width: 100%; padding: 8px;">
+          Save Gemini Key
+        </button>
       </div>
 
       <div class="glass-card">
         <h4 style="margin-bottom: 6px; font-weight: 600;">Backup Data</h4>
-        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px;">
-          Download a JSON file of your logs to transfer to another device or save as backup.
-        </p>
         <button id="btnExportData" class="btn-start-day" style="margin-bottom: 10px;">
-          💾 Download Backup JSON
+          💾 Download JSON Backup
         </button>
-
-        <label class="copy-text-btn" style="cursor: pointer; text-align: center;">
-          📥 Import Backup JSON
-          <input type="file" id="importFileInput" accept=".json" style="display: none;">
-        </label>
       </div>
 
       <div class="glass-card" style="border-color: rgba(225, 29, 72, 0.2);">
         <h4 style="color: var(--accent-rose); margin-bottom: 6px; font-weight: 600;">Reset App</h4>
-        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px;">
-          Clear all saved session history and personal records.
-        </p>
         <button id="btnResetData" class="btn-start-day" style="background: rgba(225, 29, 72, 0.2); color: #fff; border: 1px solid rgba(225, 29, 72, 0.4);">
           ⚠️ Reset All Workout Data
         </button>
@@ -155,6 +256,45 @@
     </section>
 
   </main>
+
+  <!-- Modal: BMR Form -->
+  <div id="bmrModal" class="modal-overlay hidden">
+    <div class="modal-bottom-sheet">
+      <div class="modal-header">
+        <h3 class="modal-title">🔥 BMR & TDEE Calculator</h3>
+        <button id="btnCloseBMRModal" class="btn-close-modal">✕</button>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">Weight (kg)</label>
+        <input type="number" id="bmrWeightInput" class="set-input" value="62" style="text-align: left; padding: 8px;">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">Height (cm)</label>
+        <input type="number" id="bmrHeightInput" class="set-input" value="165" style="text-align: left; padding: 8px;">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">Age (years)</label>
+        <input type="number" id="bmrAgeInput" class="set-input" value="26" style="text-align: left; padding: 8px;">
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">Activity Level</label>
+        <select id="bmrActivityInput" class="set-input" style="text-align: left; padding: 8px;">
+          <option value="1.2">Sedentary (Little/no exercise)</option>
+          <option value="1.375">Lightly Active (1-3 workouts/week)</option>
+          <option value="1.55" selected>Moderately Active (3-5 workouts/week)</option>
+          <option value="1.725">Very Active (6-7 heavy workouts/week)</option>
+        </select>
+      </div>
+
+      <button id="btnCalculateBMR" class="btn-start-day">
+        Calculate BMR & Targets
+      </button>
+    </div>
+  </div>
 
   <!-- Floating Rest Timer Pill -->
   <div id="floatingRestTimer" class="rest-timer-floating hidden">
@@ -197,25 +337,6 @@
     </div>
   </div>
 
-  <!-- Modal: Interval Timer -->
-  <div id="intervalModal" class="modal-overlay hidden">
-    <div class="modal-bottom-sheet" style="text-align: center;">
-      <div class="modal-header">
-        <h3 class="modal-title">⚡ Conditioning Interval</h3>
-      </div>
-
-      <div class="interval-display-box">
-        <div id="intervalPhaseTitle" class="interval-phase-title HARD">⚡ GO HARD (30s)</div>
-        <div id="intervalCountdown" class="interval-countdown">30</div>
-        <div id="intervalRoundsText" class="interval-rounds-count">Round 1 of 8</div>
-      </div>
-
-      <button id="btnStopInterval" class="btn-start-day" style="background: rgba(255,255,255,0.08); color: #fff;">
-        Stop Interval Timer
-      </button>
-    </div>
-  </div>
-
   <!-- Bottom Navigation Bar -->
   <nav class="bottom-nav">
     <button class="nav-tab active" data-target="home">
@@ -226,9 +347,13 @@
       <span class="nav-tab-icon">📋</span>
       <span>History</span>
     </button>
-    <button class="nav-tab" data-target="prs">
-      <span class="nav-tab-icon">🏆</span>
-      <span>PRs</span>
+    <button class="nav-tab" data-target="nutrition">
+      <span class="nav-tab-icon">🥗</span>
+      <span>Nutrition</span>
+    </button>
+    <button class="nav-tab" data-target="whoop">
+      <span class="nav-tab-icon">⌚</span>
+      <span>WHOOP</span>
     </button>
     <button class="nav-tab" data-target="settings">
       <span class="nav-tab-icon">⚙️</span>

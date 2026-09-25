@@ -1,19 +1,25 @@
 /**
- * Offline Service Worker for SNC Guided PWA
- * Cache-busting v3 for Luxury Minimalist Theme & Voice Metronome
+ * Offline Service Worker for SNC Guided 2.0 PWA
+ * Cache-busting v6 for Phase 2 Program, AI Nutrition & WHOOP integration
  */
 
-const CACHE_NAME = 'snc-workout-v3';
+const CACHE_NAME = 'snc-workout-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './css/styles.css?v=3',
+  './css/styles.css?v=5',
   './js/app.js',
   './js/programData.js',
+  './js/progressiveEngine.js',
+  './js/excelExporter.js',
+  './js/nutritionEngine.js',
+  './js/aiVisionEstimator.js',
+  './js/whoopTracker.js',
   './js/workoutEngine.js',
   './js/coachUpdater.js',
   './js/storage.js',
   './manifest.json',
+  './icons/apple-touch-icon.png',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
@@ -21,7 +27,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app shell assets v3');
+      console.log('[SW] Caching app shell assets v6');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
