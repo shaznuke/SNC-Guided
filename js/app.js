@@ -1,6 +1,6 @@
 /**
  * Main Application Orchestrator & View Controller
- * Active Session Draft Resume, 6-Week Holistic Progress Tracker, Force Cache Update Button
+ * Live Gemini AI Vision Meal Photo Recognition & Meal Deletion
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -248,6 +248,7 @@ class AppController {
       });
     }
 
+    // AI Meal Photo Scanner with Key Check & Canvas Processing
     if (this.mealPhotoInput) {
       this.mealPhotoInput.addEventListener("change", async (e) => {
         const file = e.target.files[0];
@@ -255,17 +256,28 @@ class AppController {
           alert("⚡ AI is analyzing your food/beverage photo...");
           const result = await AIVisionEstimator.analyzeMealPhotoFile(file);
 
-          NutritionEngine.addMealLog({
-            name: result.name,
-            calories: result.calories,
-            protein: result.protein,
-            carbs: result.carbs,
-            fat: result.fat,
-            photoUrl: result.photoUrl
-          });
+          if (result.requiresKey) {
+            alert(result.error);
+            this.switchTab("settings");
+            return;
+          }
 
-          this.renderNutrition();
-          alert(`✓ AI Identified: ${result.name} (${result.calories} kcal)`);
+          if (result.success) {
+            NutritionEngine.addMealLog({
+              name: result.name,
+              calories: result.calories,
+              protein: result.protein,
+              carbs: result.carbs,
+              fat: result.fat,
+              notes: result.notes,
+              photoUrl: result.photoUrl
+            });
+
+            this.renderNutrition();
+            alert(`✓ AI Identified: ${result.name} (${result.calories} kcal)`);
+          } else {
+            alert(result.error || "Failed to analyze photo.");
+          }
         }
       });
     }
@@ -278,7 +290,6 @@ class AppController {
       });
     }
 
-    // Force Update App Button (Purges Cache & Unregisters Service Workers)
     if (this.btnForceUpdateApp) {
       this.btnForceUpdateApp.addEventListener("click", () => {
         if (confirm("Force update app to latest version?")) {
@@ -685,10 +696,23 @@ class AppController {
         card.innerHTML = `
           <div class="history-card-header">
             <span>🍽 ${m.name}</span>
-            <span style="color: var(--accent-gold);">${m.calories} kcal</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="color: var(--accent-gold);">${m.calories} kcal</span>
+              <button class="btn-timer-action" style="background: rgba(255,68,68,0.2); color: #ff4444;" id="btnDeleteMeal_${m.id}">🗑 Delete</button>
+            </div>
           </div>
           <div class="history-card-date">⏱ ${m.time} | P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g</div>
+          ${m.notes ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">💡 ${m.notes}</div>` : ''}
         `;
+
+        const btnDeleteMeal = card.querySelector(`#btnDeleteMeal_${m.id}`);
+        if (btnDeleteMeal) {
+          btnDeleteMeal.addEventListener("click", () => {
+            NutritionEngine.deleteMealLog(m.id);
+            this.renderNutrition();
+          });
+        }
+
         this.mealsListContainer.appendChild(card);
       });
     }

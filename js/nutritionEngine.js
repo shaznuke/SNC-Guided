@@ -1,16 +1,11 @@
 /**
  * Nutrition Engine
- * Mifflin-St Jeor BMR & TDEE Calculator + Daily Macro Tracker
+ * Mifflin-St Jeor BMR & TDEE Calculator + Daily Macro Tracker & Meal Deletion
  */
 
 import { StorageEngine } from './storage.js';
 
 export const NutritionEngine = {
-  /**
-   * Calculates Basal Metabolic Rate (BMR) using Mifflin-St Jeor Equation
-   * Men: BMR = 10W + 6.25H - 5A + 5
-   * Women: BMR = 10W + 6.25H - 5A - 161
-   */
   calculateBMR(weightKg, heightCm, ageYears, gender = 'female') {
     const w = parseFloat(weightKg) || 60;
     const h = parseFloat(heightCm) || 165;
@@ -25,14 +20,6 @@ export const NutritionEngine = {
     return Math.round(bmr);
   },
 
-  /**
-   * Calculates Total Daily Energy Expenditure (TDEE) based on activity multiplier
-   * Multipliers:
-   * 1.2: Sedentary
-   * 1.375: Lightly active (1-3 workouts/week)
-   * 1.55: Moderately active (3-5 workouts/week)
-   * 1.725: Very active (6-7 workouts/week)
-   */
   calculateTDEE(bmr, activityLevel = 1.55) {
     return Math.round(bmr * parseFloat(activityLevel));
   },
@@ -47,9 +34,9 @@ export const NutritionEngine = {
       activityLevel: 1.55,
       bmr: 1350,
       tdee: 2090,
-      targetProtein: 130, // grams
-      targetCarbs: 200,   // grams
-      targetFat: 55       // grams
+      targetProtein: 130,
+      targetCarbs: 200,
+      targetFat: 55
     };
   },
 
@@ -80,17 +67,25 @@ export const NutritionEngine = {
     const newMeal = {
       id: `meal_${Date.now()}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      name: mealObj.name || "Meal",
+      name: mealObj.name || "Logged Item",
       calories: parseInt(mealObj.calories, 10) || 0,
       protein: parseInt(mealObj.protein, 10) || 0,
       carbs: parseInt(mealObj.carbs, 10) || 0,
       fat: parseInt(mealObj.fat, 10) || 0,
+      notes: mealObj.notes || "",
       photoUrl: mealObj.photoUrl || null
     };
 
     currentMeals.unshift(newMeal);
     localStorage.setItem(`snc_meals_${todayStr}`, JSON.stringify(currentMeals));
     return newMeal;
+  },
+
+  deleteMealLog(mealId) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let meals = this.getTodayMealLogs();
+    meals = meals.filter((m) => m.id !== mealId);
+    localStorage.setItem(`snc_meals_${todayStr}`, JSON.stringify(meals));
   },
 
   getTodayTotals() {
