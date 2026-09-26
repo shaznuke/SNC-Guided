@@ -1,6 +1,6 @@
 /**
  * Main Application Orchestrator & View Controller
- * Dragon Ball Z Super Saiyan Training Aesthetic + Canvas JPEG AI Vision Food Analyzer
+ * Active Session Draft Resume, 6-Week Holistic Progress Tracker & Session Deletion
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -32,6 +32,7 @@ class AppController {
     this.initDOMReferences();
     this.bindEvents();
     this.initInspirationalQuote();
+    this.checkActiveDraftSession();
     this.render();
     this.registerServiceWorker();
   }
@@ -41,6 +42,17 @@ class AppController {
     this.weekSelect = document.getElementById("weekSelect");
     this.navTabs = document.querySelectorAll(".nav-tab");
     this.motivationalQuote = document.getElementById("motivationalQuote");
+
+    // Draft Resume Banner
+    this.activeDraftResumeBanner = document.getElementById("activeDraftResumeBanner");
+    this.activeDraftTitle = document.getElementById("activeDraftTitle");
+    this.activeDraftSub = document.getElementById("activeDraftSub");
+    this.btnResumeDraftSession = document.getElementById("btnResumeDraftSession");
+
+    // Holistic Tracker
+    this.holisticProgressPct = document.getElementById("holisticProgressPct");
+    this.holisticProgressBar = document.getElementById("holisticProgressBar");
+    this.weeksGridChips = document.getElementById("weeksGridChips");
 
     this.viewHome = document.getElementById("viewHome");
     this.viewActiveSession = document.getElementById("viewActiveSession");
@@ -58,6 +70,7 @@ class AppController {
     this.sessionTitle = document.getElementById("sessionTitle");
     this.sessionTimer = document.getElementById("sessionTimer");
     this.btnFinishSession = document.getElementById("btnFinishSession");
+    this.btnDiscardActiveSession = document.getElementById("btnDiscardActiveSession");
 
     this.metronomeVisualBar = document.getElementById("metronomeVisualBar");
     this.metronomeStatusText = document.getElementById("metronomeStatusText");
@@ -121,6 +134,49 @@ class AppController {
     }
   }
 
+  // Check if user minimized app during an active session
+  checkActiveDraftSession() {
+    const draft = StorageEngine.getActiveWorkoutDraft();
+    if (draft && this.activeDraftResumeBanner) {
+      const prog = PROGRAM_DATA.programs[draft.programId] || PROGRAM_DATA.getActiveProgram();
+      const day = prog.days.find((d) => d.id === draft.dayId);
+      const dayName = day ? day.name : "Workout Session";
+
+      if (this.activeDraftTitle) this.activeDraftTitle.textContent = `Active Session: ${dayName} (Week ${draft.weekNum})`;
+      if (this.activeDraftSub) this.activeDraftSub.textContent = `Elapsed: ${Math.floor(draft.elapsedSeconds / 60)} mins. Tap to resume.`;
+      
+      this.activeDraftResumeBanner.classList.remove("hidden");
+
+      if (this.btnResumeDraftSession) {
+        this.btnResumeDraftSession.onclick = () => {
+          this.resumeDraftWorkout(draft);
+        };
+      }
+    }
+  }
+
+  resumeDraftWorkout(draft) {
+    if (this.activeDraftResumeBanner) this.activeDraftResumeBanner.classList.add("hidden");
+    
+    this.activeWorkout = new WorkoutEngine(draft.dayId, draft.weekNum, draft);
+    
+    this.activeWorkout.onClockTick = (formattedTime) => {
+      if (this.sessionTimer) this.sessionTimer.textContent = formattedTime;
+    };
+
+    this.activeWorkout.onSetCompleted = (exId, setIdx) => {
+      this.activeWorkout.startRestTimer(90, (secLeft) => {
+        this.showFloatingRestTimer(secLeft);
+      }, () => {
+        this.hideFloatingRestTimer();
+      });
+    };
+
+    this.sessionTitle.textContent = this.activeWorkout.dayData.name;
+    this.renderActiveSessionExercises();
+    this.switchTab("active");
+  }
+
   bindEvents() {
     if (this.programSelect) {
       this.programSelect.value = PROGRAM_DATA.getActiveProgram().id;
@@ -157,7 +213,7 @@ class AppController {
     }
     if (this.btnSaveWhoop) {
       this.btnSaveWhoop.addEventListener("click", () => {
-        const data = WhoopTracker.saveTodayWhoopData({
+        WhoopTracker.saveTodayWhoopData({
           recoveryScore: this.whoopRecoveryInput ? this.whoopRecoveryInput.value : 78,
           dayStrain: this.whoopStrainInput ? this.whoopStrainInput.value : 12.4,
           sleepPerformance: this.whoopSleepInput ? this.whoopSleepInput.value : 85
@@ -194,7 +250,6 @@ class AppController {
       });
     }
 
-    // AI Meal Photo Scanner with Canvas JPEG Processing
     if (this.mealPhotoInput) {
       this.mealPhotoInput.addEventListener("change", async (e) => {
         const file = e.target.files[0];
@@ -235,6 +290,20 @@ class AppController {
     if (this.btnFinishSession) {
       this.btnFinishSession.addEventListener("click", () => {
         this.openCoachUpdateModal();
+      });
+    }
+
+    if (this.btnDiscardActiveSession) {
+      this.btnDiscardActiveSession.addEventListener("click", () => {
+        if (confirm("Cancel and discard current active session?")) {
+          if (this.activeWorkout) {
+            this.activeWorkout.stopSessionClock();
+            this.activeWorkout = null;
+          }
+          StorageEngine.clearActiveWorkout();
+          if (this.activeDraftResumeBanner) this.activeDraftResumeBanner.classList.add("hidden");
+          this.switchTab("home");
+        }
       });
     }
 
@@ -372,7 +441,34 @@ class AppController {
     if (this.whoopHeaderAdvice) this.whoopHeaderAdvice.textContent = advice.advice;
   }
 
+  renderHolisticProgress() {
+    const history = StorageEngine.getCompletedSessions();
+    const activeProg = PROGRAM_DATA.getActiveProgram();
+    const progHistory = history.filter((s) => s.programId === activeProg.id || !s.programId);
+    
+    const totalProgramSessions = 18; // 6 weeks x 3 days
+    const completedCount = progHistory.length;
+    const pct = Math.min(100, Math.round((completedCount / totalProgramSessions) * 100));
+
+    if (this.holisticProgressPct) this.holisticProgressPct.textContent = `${pct}% Done (${completedCount}/18 Sessions)`;
+    if (this.holisticProgressBar) this.holisticProgressBar.style.width = `${pct}%`;
+
+    // Render Week Chips 1-6
+    if (this.weeksGridChips) {
+      this.weeksGridChips.innerHTML = "";
+      for (let w = 1; w <= 6; w++) {
+        const weekSessions = progHistory.filter((s) => s.week === w).length;
+        const isDone = weekSessions >= 3;
+        const chip = document.createElement("div");
+        chip.style.cssText = `font-size: 0.7rem; font-weight: 800; padding: 4px; border-radius: var(--radius-sm); border: 1px solid ${isDone ? 'var(--accent-green)' : 'rgba(255,255,255,0.1)'}; background: ${isDone ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.02)'}; color: ${isDone ? 'var(--accent-green)' : 'var(--text-muted)'};`;
+        chip.textContent = isDone ? `✓ W${w}` : `W${w}`;
+        this.weeksGridChips.appendChild(chip);
+      }
+    }
+  }
+
   renderHome() {
+    this.renderHolisticProgress();
     if (!this.dayCardsContainer) return;
     this.dayCardsContainer.innerHTML = "";
 
@@ -414,6 +510,7 @@ class AppController {
   }
 
   startWorkout(dayId) {
+    if (this.activeDraftResumeBanner) this.activeDraftResumeBanner.classList.add("hidden");
     this.activeWorkout = new WorkoutEngine(dayId, this.currentWeek);
     
     this.activeWorkout.onClockTick = (formattedTime) => {
@@ -629,6 +726,7 @@ class AppController {
     this.hideFloatingRestTimer();
     if (this.metronomeVisualBar) this.metronomeVisualBar.classList.add("hidden");
     this.activeWorkout = null;
+    this.renderHolisticProgress();
   }
 
   renderHistory() {
@@ -657,11 +755,25 @@ class AppController {
       card.innerHTML = `
         <div class="history-card-header">
           <span>${log.dayName} (Week ${log.week})</span>
-          <span>⏱ ${log.durationMins} mins</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span>⏱ ${log.durationMins}m</span>
+            <button class="btn-timer-action btn-delete-log" style="background: rgba(255,68,68,0.2); color: #ff4444;" id="btnDelete_${log.id}">🗑 Delete</button>
+          </div>
         </div>
         <div class="history-card-date">📅 ${log.date} ${log.rpeRating ? `| RPE ${log.rpeRating}/10` : ''}</div>
         <pre style="margin-top: 10px; font-family: monospace; font-size: 0.78rem; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 10px; border-radius: var(--radius-sm); white-space: pre-wrap;">${summaryText}</pre>
       `;
+
+      const btnDelete = card.querySelector(`#btnDelete_${log.id}`);
+      if (btnDelete) {
+        btnDelete.addEventListener("click", () => {
+          if (confirm(`Delete workout log for ${log.dayName} (Week ${log.week})?`)) {
+            StorageEngine.deleteCompletedSession(log.id);
+            this.renderHistory();
+            this.renderHolisticProgress();
+          }
+        });
+      }
 
       this.historyListContainer.appendChild(card);
     });

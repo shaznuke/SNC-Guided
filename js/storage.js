@@ -1,6 +1,6 @@
 /**
- * Storage Engine for SNC Workout Tracker
- * Manages LocalStorage, Session Logs, History & JSON Backup/Restore
+ * Storage Engine for SNC Guided 2.0
+ * Manages LocalStorage, Full Session Editing/Deletion, Meal Deletion, & Active Draft Resume
  */
 
 const STORAGE_KEYS = {
@@ -12,7 +12,6 @@ const STORAGE_KEYS = {
 };
 
 export const StorageEngine = {
-  // Get active week (1 to 6, default 1)
   getCurrentWeek() {
     const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_WEEK);
     return saved ? parseInt(saved, 10) : 1;
@@ -22,17 +21,25 @@ export const StorageEngine = {
     localStorage.setItem(STORAGE_KEYS.CURRENT_WEEK, weekNum.toString());
   },
 
-  // Save completed session log
   saveCompletedSession(sessionLog) {
     const history = this.getCompletedSessions();
-    history.unshift(sessionLog); // Put newest first
+    const existingIndex = history.findIndex((s) => s.id === sessionLog.id);
+
+    if (existingIndex >= 0) {
+      history[existingIndex] = sessionLog; // Update existing
+    } else {
+      history.unshift(sessionLog); // Add new
+    }
+
     localStorage.setItem(STORAGE_KEYS.COMPLETED_SESSIONS, JSON.stringify(history));
-
-    // Update PRs
     this.updatePRs(sessionLog);
-
-    // Clear active draft
     this.clearActiveWorkout();
+  },
+
+  deleteCompletedSession(sessionId) {
+    let history = this.getCompletedSessions();
+    history = history.filter((s) => s.id !== sessionId);
+    localStorage.setItem(STORAGE_KEYS.COMPLETED_SESSIONS, JSON.stringify(history));
   },
 
   getCompletedSessions() {
@@ -40,36 +47,46 @@ export const StorageEngine = {
     return raw ? JSON.parse(raw) : [];
   },
 
-  // Save transient active workout draft in case browser reloads during workout
+  // Auto-save active workout draft to prevent loss when app is minimized
   saveActiveWorkoutDraft(draftData) {
-    localStorage.setItem(STORAGE_KEYS.IN_PROGRESS_WORKOUT, JSON.stringify(draftData));
+    localStorage.setItem(STORAGE_KEYS.IN_PROGRESS_WORKOUT, JSON.stringify({
+      ...draftData,
+      lastSavedTimestamp: Date.now()
+    }));
   },
 
   getActiveWorkoutDraft() {
     const raw = localStorage.getItem(STORAGE_KEYS.IN_PROGRESS_WORKOUT);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    try {
+      const draft = JSON.parse(raw);
+      // Only return draft if saved within last 24 hours
+      if (Date.now() - draft.lastSavedTimestamp < 86400000) {
+        return draft;
+      }
+    } catch (e) {}
+    return null;
   },
 
   clearActiveWorkout() {
     localStorage.removeItem(STORAGE_KEYS.IN_PROGRESS_WORKOUT);
   },
 
-  // Update Personal Records
   updatePRs(sessionLog) {
     const prs = this.getPRs();
     let updated = false;
 
     if (sessionLog.exercises) {
-      Object.entries(sessionLog.exercises).forEach(([exerciseId, setsData]) => {
-        if (Array.isArray(setsData)) {
-          setsData.forEach((set) => {
+      Object.entries(sessionLog.exercises).forEach(([exerciseId, exData]) => {
+        if (Array.isArray(exData.sets)) {
+          exData.sets.forEach((set) => {
             const weight = parseFloat(set.weight) || 0;
             const reps = parseInt(set.reps, 10) || 0;
             if (weight > 0) {
               const currentPr = prs[exerciseId] || { maxWeight: 0, bestReps: 0, date: "" };
               if (weight > currentPr.maxWeight || (weight === currentPr.maxWeight && reps > currentPr.bestReps)) {
                 prs[exerciseId] = {
-                  exerciseName: set.exerciseName || exerciseId,
+                  exerciseName: exData.name || exerciseId,
                   maxWeight: weight,
                   bestReps: reps,
                   date: sessionLog.date,
@@ -93,10 +110,9 @@ export const StorageEngine = {
     return raw ? JSON.parse(raw) : {};
   },
 
-  // Export all user data as JSON file for backup
   exportBackupJSON() {
     const exportData = {
-      app: "SNC-Workout-Tracker",
+      app: "SNC-Guided-2.0",
       exportedAt: new Date().toISOString(),
       currentWeek: this.getCurrentWeek(),
       completedSessions: this.getCompletedSessions(),
@@ -107,16 +123,15 @@ export const StorageEngine = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `SNC_Workout_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `SNC_Guided_Backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   },
 
-  // Import JSON backup
   importBackupJSON(jsonString) {
     try {
       const data = JSON.parse(jsonString);
-      if (data.app === "SNC-Workout-Tracker" || data.completedSessions) {
+      if (data.app || data.completedSessions) {
         if (data.currentWeek) this.setCurrentWeek(data.currentWeek);
         if (Array.isArray(data.completedSessions)) {
           localStorage.setItem(STORAGE_KEYS.COMPLETED_SESSIONS, JSON.stringify(data.completedSessions));
@@ -132,7 +147,6 @@ export const StorageEngine = {
     }
   },
 
-  // Clear all data (Reset app)
   resetAllData() {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_WEEK);
     localStorage.removeItem(STORAGE_KEYS.COMPLETED_SESSIONS);

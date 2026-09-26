@@ -1,21 +1,30 @@
 /**
  * Workout Engine
- * Supports Phase 1 & Phase 2 (Pyramid Loading 15-12-9-6 Reps), Progressive Suggestions & Audio Metronome
+ * Supports Phase 1 & Phase 2, Active Session Auto-Save on Minimize, & Set Clear/Delete
  */
 
 import { PROGRAM_DATA } from './programData.js';
 import { StorageEngine } from './storage.js';
 
 export class WorkoutEngine {
-  constructor(dayId, weekNum) {
+  constructor(dayId, weekNum, existingDraft = null) {
     this.activeProgram = PROGRAM_DATA.getActiveProgram();
     this.dayData = this.activeProgram.days.find((d) => d.id === dayId);
     this.weekNum = weekNum;
     this.targetInfo = this.activeProgram.getWeekTarget(weekNum);
-    this.startTime = Date.now();
-    this.elapsedSeconds = 0;
-    this.timerInterval = null;
+    
+    if (existingDraft) {
+      this.startTime = existingDraft.savedAt || Date.now();
+      this.elapsedSeconds = existingDraft.elapsedSeconds || 0;
+      this.loggedData = existingDraft.loggedData || {};
+    } else {
+      this.startTime = Date.now();
+      this.elapsedSeconds = 0;
+      this.loggedData = {};
+      this.initExerciseLogs();
+    }
 
+    this.timerInterval = null;
     this.audioCtx = null;
     this.audioUnlocked = false;
 
@@ -33,10 +42,18 @@ export class WorkoutEngine {
     this.metronomeStep = 0;
     this.metronomeInterval = null;
 
-    this.loggedData = {};
-
-    this.initExerciseLogs();
+    this.bindMinimizeListeners();
     this.startSessionClock();
+  }
+
+  bindMinimizeListeners() {
+    // Auto-save draft when user minimizes app, switches apps, or locks iPhone screen
+    const handleSave = () => this.saveDraft();
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") handleSave();
+    });
+    window.addEventListener("pagehide", handleSave);
+    window.addEventListener("beforeunload", handleSave);
   }
 
   unlockIOSAudio() {
@@ -110,6 +127,9 @@ export class WorkoutEngine {
   startSessionClock() {
     this.timerInterval = setInterval(() => {
       this.elapsedSeconds++;
+      if (this.elapsedSeconds % 5 === 0) {
+        this.saveDraft(); // Auto-save draft every 5 seconds
+      }
       if (this.onClockTick) this.onClockTick(this.getFormattedElapsed());
     }, 1000);
   }
@@ -136,6 +156,17 @@ export class WorkoutEngine {
         this.onSetCompleted(exId, setIdx);
       }
 
+      this.saveDraft();
+    }
+  }
+
+  // Clear or reset a set input completely
+  clearSetData(exId, setIdx) {
+    if (this.loggedData[exId] && this.loggedData[exId].sets[setIdx]) {
+      const setObj = this.loggedData[exId].sets[setIdx];
+      setObj.completed = false;
+      setObj.weight = "";
+      setObj.rpe = "";
       this.saveDraft();
     }
   }

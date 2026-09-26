@@ -1,13 +1,13 @@
 /**
  * Offline Service Worker for SNC Guided 2.0 PWA
- * Cache-busting v7 for DBZ Super Saiyan Theme & Canvas JPEG AI Vision Analyzer
+ * Cache-busting v8 for Draft Resume & Holistic 6-Week Progress Tracker
  */
 
-const CACHE_NAME = 'snc-workout-v7';
+const CACHE_NAME = 'snc-workout-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './css/styles.css?v=6',
+  './css/styles.css?v=7',
   './js/app.js',
   './js/programData.js',
   './js/progressiveEngine.js',
@@ -27,7 +27,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app shell assets v7');
+      console.log('[SW] Caching app shell assets v8');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
