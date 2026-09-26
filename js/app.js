@@ -1,6 +1,6 @@
 /**
  * Main Application Orchestrator & View Controller
- * Active Session Draft Resume, 6-Week Holistic Progress Tracker & Session Deletion
+ * Active Session Draft Resume, 6-Week Holistic Progress Tracker, Force Cache Update Button
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -43,13 +43,11 @@ class AppController {
     this.navTabs = document.querySelectorAll(".nav-tab");
     this.motivationalQuote = document.getElementById("motivationalQuote");
 
-    // Draft Resume Banner
     this.activeDraftResumeBanner = document.getElementById("activeDraftResumeBanner");
     this.activeDraftTitle = document.getElementById("activeDraftTitle");
     this.activeDraftSub = document.getElementById("activeDraftSub");
     this.btnResumeDraftSession = document.getElementById("btnResumeDraftSession");
 
-    // Holistic Tracker
     this.holisticProgressPct = document.getElementById("holisticProgressPct");
     this.holisticProgressBar = document.getElementById("holisticProgressBar");
     this.weeksGridChips = document.getElementById("weeksGridChips");
@@ -122,6 +120,7 @@ class AppController {
 
     this.geminiApiKeyInput = document.getElementById("geminiApiKeyInput");
     this.btnSaveApiKey = document.getElementById("btnSaveApiKey");
+    this.btnForceUpdateApp = document.getElementById("btnForceUpdateApp");
     this.btnExportData = document.getElementById("btnExportData");
     this.btnResetData = document.getElementById("btnResetData");
   }
@@ -134,7 +133,6 @@ class AppController {
     }
   }
 
-  // Check if user minimized app during an active session
   checkActiveDraftSession() {
     const draft = StorageEngine.getActiveWorkoutDraft();
     if (draft && this.activeDraftResumeBanner) {
@@ -277,6 +275,25 @@ class AppController {
       this.btnSaveApiKey.addEventListener("click", () => {
         AIVisionEstimator.setStoredApiKey(this.geminiApiKeyInput.value);
         alert("✓ Gemini API Key saved!");
+      });
+    }
+
+    // Force Update App Button (Purges Cache & Unregisters Service Workers)
+    if (this.btnForceUpdateApp) {
+      this.btnForceUpdateApp.addEventListener("click", () => {
+        if (confirm("Force update app to latest version?")) {
+          if ('caches' in window) {
+            caches.keys().then((names) => {
+              names.forEach((name) => caches.delete(name));
+            });
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              registrations.forEach((r) => r.unregister());
+            });
+          }
+          setTimeout(() => location.reload(true), 500);
+        }
       });
     }
 
@@ -446,14 +463,13 @@ class AppController {
     const activeProg = PROGRAM_DATA.getActiveProgram();
     const progHistory = history.filter((s) => s.programId === activeProg.id || !s.programId);
     
-    const totalProgramSessions = 18; // 6 weeks x 3 days
+    const totalProgramSessions = 18;
     const completedCount = progHistory.length;
     const pct = Math.min(100, Math.round((completedCount / totalProgramSessions) * 100));
 
     if (this.holisticProgressPct) this.holisticProgressPct.textContent = `${pct}% Done (${completedCount}/18 Sessions)`;
     if (this.holisticProgressBar) this.holisticProgressBar.style.width = `${pct}%`;
 
-    // Render Week Chips 1-6
     if (this.weeksGridChips) {
       this.weeksGridChips.innerHTML = "";
       for (let w = 1; w <= 6; w++) {
