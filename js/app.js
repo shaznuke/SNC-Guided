@@ -1,6 +1,6 @@
 /**
  * Main Application Orchestrator & View Controller
- * Phase 2 Program, Progressive Engine, Excel Exporter, AI Nutrition & WHOOP Integration
+ * Dragon Ball Z Super Saiyan Training Aesthetic + Canvas JPEG AI Vision Food Analyzer
  */
 
 import { PROGRAM_DATA } from './programData.js';
@@ -13,14 +13,14 @@ import { NutritionEngine } from './nutritionEngine.js';
 import { AIVisionEstimator } from './aiVisionEstimator.js';
 import { WhoopTracker } from './whoopTracker.js';
 
-const INSPIRATIONAL_QUOTES = [
-  "Consistency is the quiet bridge between goals and accomplishment.",
-  "Small daily improvements over time lead to stunning results.",
-  "Focus on the process, and the outcome will take care of itself.",
-  "Strength is built in the quiet moments of effort.",
-  "Your dedication today creates your resilience tomorrow.",
-  "Quality over load. Precision in every movement.",
-  "Discipline is choosing between what you want now and what you want most."
+const DBZ_INSPIRATIONAL_QUOTES = [
+  "PUSH PAST YOUR LIMITS. BREAK YOUR CEILING.",
+  "WORK HARD, STUDY WELL, AND EAT AND SLEEP PLENTY!",
+  "POWER COMES IN RESPONSE TO A NEED, NOT A DESIRE.",
+  "TRAIN LIKE A SAIYAN IN THE HYPERBOLIC TIME CHAMBER.",
+  "PAIN IS TEMPORARY. POWER IS FOREVER.",
+  "OUTWORK EVERY CEILING YOU EVER PLACED ON YOURSELF.",
+  "EVERY REP IS A STEP CLOSER TO SUPER SAIYAN STRENGTH."
 ];
 
 class AppController {
@@ -77,10 +77,8 @@ class AppController {
 
     this.btnToggleMetronome = document.getElementById("btnToggleMetronome");
 
-    // Excel Export
     this.btnExportExcelCoach = document.getElementById("btnExportExcelCoach");
 
-    // WHOOP References
     this.whoopHeaderBanner = document.getElementById("whoopHeaderBanner");
     this.whoopHeaderTitle = document.getElementById("whoopHeaderTitle");
     this.whoopHeaderAdvice = document.getElementById("whoopHeaderAdvice");
@@ -91,7 +89,6 @@ class AppController {
     this.whoopSleepInput = document.getElementById("whoopSleepInput");
     this.btnSaveWhoop = document.getElementById("btnSaveWhoop");
 
-    // Nutrition References
     this.bmrValueDisplay = document.getElementById("bmrValueDisplay");
     this.tdeeValueDisplay = document.getElementById("tdeeValueDisplay");
     this.calsProgressText = document.getElementById("calsProgressText");
@@ -110,7 +107,6 @@ class AppController {
     this.bmrActivityInput = document.getElementById("bmrActivityInput");
     this.btnCalculateBMR = document.getElementById("btnCalculateBMR");
 
-    // Settings
     this.geminiApiKeyInput = document.getElementById("geminiApiKeyInput");
     this.btnSaveApiKey = document.getElementById("btnSaveApiKey");
     this.btnExportData = document.getElementById("btnExportData");
@@ -120,13 +116,12 @@ class AppController {
   initInspirationalQuote() {
     if (this.motivationalQuote) {
       const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-      const selectedQuote = INSPIRATIONAL_QUOTES[dayOfYear % INSPIRATIONAL_QUOTES.length];
+      const selectedQuote = DBZ_INSPIRATIONAL_QUOTES[dayOfYear % DBZ_INSPIRATIONAL_QUOTES.length];
       this.motivationalQuote.textContent = selectedQuote;
     }
   }
 
   bindEvents() {
-    // Program Selector
     if (this.programSelect) {
       this.programSelect.value = PROGRAM_DATA.getActiveProgram().id;
       this.programSelect.addEventListener("change", (e) => {
@@ -135,7 +130,6 @@ class AppController {
       });
     }
 
-    // Week Switcher
     if (this.weekSelect) {
       this.weekSelect.value = this.currentWeek.toString();
       this.weekSelect.addEventListener("change", (e) => {
@@ -145,7 +139,6 @@ class AppController {
       });
     }
 
-    // Navigation Tabs
     this.navTabs.forEach((tab) => {
       tab.addEventListener("click", () => {
         const targetView = tab.getAttribute("data-target");
@@ -153,14 +146,12 @@ class AppController {
       });
     });
 
-    // Excel Export
     if (this.btnExportExcelCoach) {
       this.btnExportExcelCoach.addEventListener("click", () => {
         ExcelExporter.exportCoachSpreadsheet();
       });
     }
 
-    // WHOOP Banner & Save
     if (this.whoopHeaderBanner) {
       this.whoopHeaderBanner.addEventListener("click", () => this.switchTab("whoop"));
     }
@@ -176,7 +167,6 @@ class AppController {
       });
     }
 
-    // Nutrition & AI Photo Scanner
     if (this.btnEditBMR) {
       this.btnEditBMR.addEventListener("click", () => {
         if (this.bmrModal) this.bmrModal.classList.remove("hidden");
@@ -204,34 +194,29 @@ class AppController {
       });
     }
 
+    // AI Meal Photo Scanner with Canvas JPEG Processing
     if (this.mealPhotoInput) {
       this.mealPhotoInput.addEventListener("change", async (e) => {
         const file = e.target.files[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = async (event) => {
-            const base64 = event.target.result;
-            alert("📸 AI is analyzing your meal photo...");
-            const result = await AIVisionEstimator.analyzeMealPhoto(base64);
+          alert("⚡ AI is analyzing your food/beverage photo...");
+          const result = await AIVisionEstimator.analyzeMealPhotoFile(file);
 
-            NutritionEngine.addMealLog({
-              name: result.name,
-              calories: result.calories,
-              protein: result.protein,
-              carbs: result.carbs,
-              fat: result.fat,
-              photoUrl: base64
-            });
+          NutritionEngine.addMealLog({
+            name: result.name,
+            calories: result.calories,
+            protein: result.protein,
+            carbs: result.carbs,
+            fat: result.fat,
+            photoUrl: result.photoUrl
+          });
 
-            this.renderNutrition();
-            alert(`✓ AI Logged: ${result.name} (${result.calories} kcal)`);
-          };
-          reader.readAsDataURL(file);
+          this.renderNutrition();
+          alert(`✓ AI Identified: ${result.name} (${result.calories} kcal)`);
         }
       });
     }
 
-    // Gemini API Key Save
     if (this.btnSaveApiKey && this.geminiApiKeyInput) {
       this.geminiApiKeyInput.value = AIVisionEstimator.getStoredApiKey();
       this.btnSaveApiKey.addEventListener("click", () => {
@@ -240,7 +225,6 @@ class AppController {
       });
     }
 
-    // Workout Controls
     if (this.btnSkipRest) {
       this.btnSkipRest.addEventListener("click", () => {
         if (this.activeWorkout) this.activeWorkout.stopRestTimer();
@@ -413,11 +397,11 @@ class AppController {
         </div>
         <div class="day-subtitle">${day.subtitle}</div>
         <div class="day-meta-tags">
-          <span class="tag tag-highlight">Week ${this.currentWeek}: ${repsLabel}</span>
+          <span class="tag tag-highlight">⚡ Week ${this.currentWeek}: ${repsLabel}</span>
           <span class="tag">3s Eccentric Focus</span>
         </div>
         <button class="btn-start-day">
-          <span>Start Session</span>
+          <span>🔥 START TRAINING</span>
         </button>
       `;
 
@@ -457,7 +441,7 @@ class AppController {
 
     dayData.sections.forEach((section) => {
       const secHeader = document.createElement("h4");
-      secHeader.style.cssText = "color: var(--accent-gold); margin: 20px 0 10px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;";
+      secHeader.style.cssText = "color: var(--accent-gold); margin: 20px 0 10px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 800;";
       secHeader.textContent = section.title;
       this.sessionExercisesContainer.appendChild(secHeader);
 
@@ -478,14 +462,13 @@ class AppController {
         const loggedEx = this.activeWorkout.loggedData[ex.id];
 
         let setsRowsHTML = loggedEx.sets.map((setObj, sIdx) => {
-          // Calculate Progressive Suggestion for setIdx
           const sug = ProgressiveEngine.getSetSuggestion(ex.id, this.currentWeek, sIdx, setObj.reps);
 
           let sugBannerHTML = "";
           if (sug.hasData) {
             sugBannerHTML = `
-              <div style="grid-column: 1 / -1; font-size: 0.72rem; color: var(--accent-gold); background: rgba(212, 175, 55, 0.08); padding: 4px 8px; border-radius: var(--radius-sm); margin-bottom: 4px;">
-                💡 ${sug.text}
+              <div style="grid-column: 1 / -1; font-size: 0.72rem; color: var(--accent-gold); background: rgba(255, 215, 0, 0.08); padding: 4px 8px; border-radius: var(--radius-sm); margin-bottom: 4px; font-weight: 700;">
+                ⚡ ${sug.text}
               </div>
             `;
           }
@@ -570,7 +553,6 @@ class AppController {
     if (this.carbsProgressText) this.carbsProgressText.textContent = `${totals.carbs} / ${settings.targetCarbs}g`;
     if (this.fatsProgressText) this.fatsProgressText.textContent = `${totals.fat} / ${settings.targetFat}g`;
 
-    // Render Meals List
     if (this.mealsListContainer) {
       this.mealsListContainer.innerHTML = "";
       const meals = NutritionEngine.getTodayMealLogs();
@@ -578,7 +560,7 @@ class AppController {
       if (meals.length === 0) {
         this.mealsListContainer.innerHTML = `
           <div style="text-align: center; color: var(--text-muted); padding: 20px 0; font-size: 0.85rem;">
-            No meals logged today yet. Snap a meal photo above!
+            No meals logged today yet. Snap a meal/drink photo above!
           </div>
         `;
         return;
@@ -678,7 +660,7 @@ class AppController {
           <span>⏱ ${log.durationMins} mins</span>
         </div>
         <div class="history-card-date">📅 ${log.date} ${log.rpeRating ? `| RPE ${log.rpeRating}/10` : ''}</div>
-        <pre style="margin-top: 10px; font-family: monospace; font-size: 0.78rem; color: var(--text-secondary); background: rgba(0,0,0,0.3); padding: 10px; border-radius: var(--radius-sm); white-space: pre-wrap;">${summaryText}</pre>
+        <pre style="margin-top: 10px; font-family: monospace; font-size: 0.78rem; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 10px; border-radius: var(--radius-sm); white-space: pre-wrap;">${summaryText}</pre>
       `;
 
       this.historyListContainer.appendChild(card);
