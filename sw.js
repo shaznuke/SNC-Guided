@@ -1,14 +1,14 @@
 /**
  * Offline Service Worker for SNC Guided 2.0 PWA
- * Cache-busting v9 for Gemini Vision AI Key & Meal Deletion
+ * Cache-busting v10 for Pre-embedded Gemini AI Vision Key
  */
 
-const CACHE_NAME = 'snc-workout-v9';
+const CACHE_NAME = 'snc-workout-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './css/styles.css?v=8',
-  './js/app.js',
+  './js/app.js?v=8',
   './js/programData.js',
   './js/progressiveEngine.js',
   './js/excelExporter.js',
@@ -27,7 +27,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app shell assets v9');
+      console.log('[SW] Caching app shell assets v10');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
